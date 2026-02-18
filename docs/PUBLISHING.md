@@ -22,6 +22,7 @@ Update the version and changelog before publishing:
 
 - Bump `version` in `pyproject.toml`.
 - Update `CHANGELOG.md` with the new entry.
+- Add or update release notes in `docs/releases/<VERSION>.md` for the GitHub release body.
 - Verify that `README.md` and package metadata are still correct.
 
 ## 2) Run local checks
@@ -75,6 +76,8 @@ python -c "from astris import AstrisApp; print(AstrisApp)"
 astris new hello_astris
 ```
 
+Publish the matching GitHub release using the content from `docs/releases/<VERSION>.md`.
+
 ## Common issues
 
 - `twine check` fails because of HTML files in `dist/`:
@@ -83,3 +86,41 @@ astris new hello_astris
   - Use the active virtual environment binary or reinstall with `uv pip install -e .`.
 - Error due to an existing version:
   - Bump `version` in `pyproject.toml` and build again.
+
+## Release notes template
+
+Create `docs/releases/<VERSION>.md` with the following structure:
+
+```markdown
+# Astris <VERSION>
+
+Release date: <YYYY-MM-DD>
+
+## Highlights
+
+<Short summary of the release focus>
+
+## What's changed
+
+### Added
+- <Item>
+
+### Changed
+- <Item>
+
+### Fixed
+- <Item>
+
+## Why this matters
+
+- <User impact>
+
+## Validation
+
+- `uv run --group dev pyright` -> `<result>`
+- `uv run --group dev pytest` -> `<result>`
+
+## Upgrade notes
+
+<Migration steps or "No migration is required.">
+```

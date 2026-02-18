@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.1.2] - 2026-02-19
+
+### Added
+- Added `astris/py.typed` to mark the package as typed (PEP 561).
+- Added head asset registration APIs in `AstrisApp`: `add_head_link(...)` and `add_head_script(...)`.
+
+### Changed
+- Updated packaging configuration to include `py.typed` in distributed artifacts via `tool.setuptools.package-data`.
+- Fixed consumer-side mypy warning: "Skipping analyzing \"astris\": module is installed, but missing library stubs or py.typed marker".
+- Updated page rendering/build flow to inject registered CSS/JS assets into the document `<head>`.
+- Updated `README.md` and `example.py` with CDN usage examples (Bootstrap).
+
 ## [0.1.1] - 2026-02-18
 
 ### Added
