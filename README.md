@@ -1,0 +1,79 @@
+# Astris
+
+[![Tests](https://github.com/fmanzano/pystro/actions/workflows/tests.yml/badge.svg)](https://github.com/fmanzano/pystro/actions/workflows/tests.yml)
+
+Astris is a minimal Python framework for building static websites using component-style APIs.
+
+## Installation
+
+```bash
+pip install astris
+```
+
+## Quick start with CLI
+
+Create a new project scaffold:
+
+```bash
+astris new my_site
+cd my_site
+uv run python main.py
+```
+
+Build static files:
+
+```bash
+uv run python main.py build
+```
+
+## Basic usage
+
+```python
+from astris import AstrisApp
+from astris.lib import Body, H1, Html
+
+app = AstrisApp()
+
+
+@app.page("/")
+def home():
+	return Html(children=[
+		Body(children=[
+			H1(children=["Hello from Astris"]),
+		])
+	])
+
+
+if __name__ == "__main__":
+	app.run_dev()
+```
+
+## Development
+
+```bash
+uv sync --group dev
+uv pip install -e .
+uv run --group dev pytest
+```
+
+## Continuous Integration
+
+GitHub Actions runs tests on push and pull request events targeting main using Python 3.11, 3.12, and 3.13.
+The workflow is defined in `.github/workflows/tests.yml`.
+
+## Release checklist
+
+```bash
+make release-check
+```
+
+Equivalent manual commands:
+
+```bash
+uv sync --group dev
+uv run --group dev pytest
+uv run --group dev python -m build
+uv run --group dev twine check dist/*.whl dist/*.tar.gz
+```
+
+`example.py` in this repository is an internal framework demo and not the standard end-user workflow.

@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "astris"
+version = "0.1.0"
+description = "Minimal Python framework for building static websites with component-style APIs."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "fastapi>=0.129.0",
+    "uvicorn>=0.41.0",
+]
+
+[project.scripts]
+astris = "astris.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
+    "pytest-cov>=7.0.0",
+    "build>=1.2.2.post1",
+    "twine>=6.2.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["astris*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-q"
