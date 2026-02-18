@@ -44,3 +44,14 @@
 - If adding CLI/entrypoints, preserve compatibility with existing `example.py` workflow unless asked otherwise.
 - Write all new/updated documentation in English.
 - Write all new/updated code comments and docstrings in English.
+
+## Typing guardrail for `children`
+- `Element.__init__` accepts `children` as `Sequence[Component | str] | None`.
+- Keep the internal representation as `List[Component | str]` (materialize with `list(children)` when provided).
+- Reason: avoid `list` invariance issues in Pyright/Pylance for patterns like `children=[Div(...)]`.
+- Do not revert to `List[Component | str]` in the input parameter unless typing behavior is intentionally changed.
+
+## Type checking workflow
+- Pyright is part of the `dev` dependency group.
+- Local type check command: `uv run --group dev pyright`.
+- CI includes a dedicated `typecheck` job in `.github/workflows/tests.yml`.

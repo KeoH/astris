@@ -33,6 +33,7 @@ dev = [
     "pytest-cov>=7.0.0",
     "build>=1.2.2.post1",
     "twine>=6.2.0",
+    "pyright>=1.1.403",
 ]
 
 [tool.setuptools.packages.find]
@@ -42,3 +43,10 @@ include = ["astris*"]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 addopts = "-q"
+
+[tool.pyright]
+include = ["astris", "tests", "example.py"]
+typeCheckingMode = "basic"
+pythonVersion = "3.11"
+venvPath = "."
+venv = ".venv"

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Sequence, Union
 
 
 class Component(ABC):
@@ -32,9 +32,9 @@ class Element(Component):
     tag: str = "div"
 
     def __init__(
-        self, children: Optional[List[Union[Component, str]]] = None, **attributes
+        self, children: Optional[Sequence[Union[Component, str]]] = None, **attributes
     ):
-        self.children = children or []
+        self.children: List[Union[Component, str]] = list(children) if children else []
         self.attributes = self._process_attributes(attributes)
 
     def _process_attributes(self, attrs: Dict) -> Dict:
