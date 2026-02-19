@@ -1,4 +1,4 @@
-.PHONY: help sync install test test-cov ruff ruff-check dev build docs docs-serve release-check
+.PHONY: help sync install test test-cov ruff ruff-check dev build docs docs-serve release-check release-upload
 
 help:
 	@echo "Available commands:"
@@ -13,6 +13,7 @@ help:
 	@echo "  make docs       - Build user docs with MkDocs (strict)"
 	@echo "  make docs-serve - Serve user docs locally with live reload"
 	@echo "  make release-check - Run pre-release checks for PyPI publishing"
+	@echo "  make release-upload - Upload built artifacts to PyPI"
 
 sync:
 	uv sync --group dev
@@ -51,3 +52,10 @@ release-check:
 	uv run --group dev python -m pytest
 	uv run --group dev python -m build
 	uv run --group dev python -m twine check dist/*.whl dist/*.tar.gz
+
+release-upload:
+	@test -f .env || (echo "Missing .env file with TWINE credentials"; exit 1)
+	@set -a; . ./.env; set +a; \
+		test -n "$$TWINE_USERNAME" || (echo "TWINE_USERNAME is not set"; exit 1); \
+		test -n "$$TWINE_PASSWORD" || (echo "TWINE_PASSWORD is not set"; exit 1); \
+		uv run --group dev python -m twine upload --repository pypi dist/*.whl dist/*.tar.gz
