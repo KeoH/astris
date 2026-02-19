@@ -20,12 +20,12 @@ class AstrisApp:
         self._fastapi_app = FastAPI()
 
     def add_head_link(self, href: str, rel: str = "stylesheet", **attributes) -> None:
-        """Register a <link> tag to be injected in the document head."""
+        """Register a link tag to be injected in the document head."""
         link_attrs = {"rel": rel, "href": href, **attributes}
         self._head_links.append({key: str(value) for key, value in link_attrs.items()})
 
     def add_head_script(self, src: str, **attributes) -> None:
-        """Register a <script> tag to be injected in the document head."""
+        """Register a script tag to be injected in the document head."""
         script_attrs = {"src": src, **attributes}
         self._head_scripts.append(
             {key: str(value) for key, value in script_attrs.items()}

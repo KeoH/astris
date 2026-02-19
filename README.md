@@ -114,3 +114,15 @@ uv run --group dev twine check dist/*.whl dist/*.tar.gz
 ```
 
 `example.py` in this repository is an internal framework demo and not the standard end-user workflow.
+
+## Agent skill: release-prep-astris
+
+This repository includes a workspace skill at `.agent/skills/release-prep-astris`.
+
+Use this skill when preparing a new Astris version and you want a repeatable release-prep workflow that covers:
+
+- Version alignment across project metadata.
+- Changelog and internal release notes updates.
+- Local validation checks (`pytest`, `pyright`, `release-check`).
+
+By default, this skill prepares the repository for release but does not publish artifacts to TestPyPI or PyPI unless explicitly requested.

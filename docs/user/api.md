@@ -12,3 +12,4 @@ This reference includes only Astris public API exports.
         - Component
         - Element
         - Text
+        - __version__

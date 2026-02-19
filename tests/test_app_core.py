@@ -1,5 +1,6 @@
 import types
 
+import astris
 from astris import AstrisApp, Text
 from astris.lib import Div
 
@@ -64,3 +65,9 @@ def test_render_page_html_creates_head_when_missing() -> None:
 
     assert "<head>" in html
     assert "tailwind.css" in html
+
+
+def test_runtime_version_is_exported() -> None:
+    assert isinstance(astris.__version__, str)
+    assert astris.__version__.count(".") == 2
+    assert "__version__" in astris.__all__

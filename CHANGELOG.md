@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.1.3] - 2026-02-19
+
+### Added
+- Added runtime version export as `astris.__version__` in the public API.
+- Added workspace agent skill `release-prep-astris` under `.agent/skills/` to standardize release preparation workflows.
+- Added reusable skill resources for release checklist and internal release note template.
+
+### Changed
+- Updated package version metadata to `0.1.3`.
+- Updated user-facing README with the new workspace skill usage section.
+
 ## [0.1.2] - 2026-02-19
 
 ### Added
