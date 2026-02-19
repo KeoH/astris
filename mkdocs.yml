@@ -1,0 +1,27 @@
+site_name: Astris
+site_description: User documentation for Astris
+site_url: https://astris.readthedocs.io/
+repo_url: https://github.com/fmanzano/astris
+theme:
+  name: material
+
+docs_dir: docs/user
+
+nav:
+  - Home: index.md
+  - Quickstart: quickstart.md
+  - API: api.md
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_root_heading: false
+            show_source: false
+            heading_level: 2
+
+markdown_extensions:
+  - toc:
+      permalink: true

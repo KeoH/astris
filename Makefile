@@ -1,4 +1,4 @@
-.PHONY: help sync install test test-cov ruff ruff-check dev build release-check
+.PHONY: help sync install test test-cov ruff ruff-check dev build docs docs-serve release-check
 
 help:
 	@echo "Available commands:"
@@ -10,6 +10,8 @@ help:
 	@echo "  make ruff-check - Validate lint and formatting without modifying files"
 	@echo "  make dev        - Start development server"
 	@echo "  make build      - Generate static site in dist/"
+	@echo "  make docs       - Build user docs with MkDocs (strict)"
+	@echo "  make docs-serve - Serve user docs locally with live reload"
 	@echo "  make release-check - Run pre-release checks for PyPI publishing"
 
 sync:
@@ -36,7 +38,13 @@ dev:
 	uv run python example.py
 
 build:
-	uv run python example.py build
+	uv run astris build --file example.py
+
+docs:
+	uv run --group docs mkdocs build --strict
+
+docs-serve:
+	uv run --group docs mkdocs serve
 
 release-check:
 	uv sync --group dev

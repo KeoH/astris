@@ -42,6 +42,7 @@
 - Prefer extending `Element` for new HTML-like components.
 - Keep internal link rewriting logic centralized in `AstrisApp._rewrite_static_links`.
 - If adding CLI/entrypoints, preserve compatibility with existing `example.py` workflow unless asked otherwise.
+- Whenever a feature is implemented or modified, evaluate and update `CHANGELOG.md`, public docs in `docs/user/`, `README.md`, and internal release notes in `docs/internal/releases/` when applicable.
 - Write all new/updated documentation in English.
 - Write all new/updated code comments and docstrings in English.
 

@@ -35,6 +35,11 @@ dev = [
     "twine>=6.2.0",
     "pyright>=1.1.403",
 ]
+docs = [
+    "mkdocs>=1.6,<2",
+    "mkdocs-material>=9.5,<9.6",
+    "mkdocstrings[python]>=0.30",
+]
 
 [tool.setuptools.packages.find]
 include = ["astris*"]

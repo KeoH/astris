@@ -4,6 +4,11 @@
 
 Astris is a minimal Python framework for building static websites using component-style APIs.
 
+## Documentation
+
+- User documentation (for building websites): `docs/user`
+- Internal framework-maintainer documentation: `docs/internal`
+
 ## Installation
 
 ```bash
@@ -15,15 +20,15 @@ pip install astris
 Create a new project scaffold:
 
 ```bash
-astris new my_site
-cd my_site
+uvx astris new my-project
+cd my-project
 uv run python main.py
 ```
 
 Build static files:
 
 ```bash
-uv run python main.py build
+uv run astris build
 ```
 
 ## Basic usage
@@ -72,6 +77,20 @@ app.add_head_script(
 uv sync --group dev
 uv pip install -e .
 uv run --group dev pytest
+```
+
+## Documentation (local)
+
+Build user documentation in strict mode:
+
+```bash
+make docs
+```
+
+Serve user documentation with live reload:
+
+```bash
+make docs-serve
 ```
 
 ## Continuous Integration
