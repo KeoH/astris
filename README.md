@@ -1,6 +1,6 @@
 # Astris
 
-[![Tests](https://github.com/fmanzano/pystro/actions/workflows/tests.yml/badge.svg)](https://github.com/fmanzano/pystro/actions/workflows/tests.yml)
+[![Tests](https://github.com/fmanzano/astris/actions/workflows/tests.yml/badge.svg)](https://github.com/fmanzano/astris/actions/workflows/tests.yml)
 
 Astris is a minimal Python framework for building static websites using component-style APIs.
 
