@@ -69,3 +69,27 @@ def test_build_rewrites_relative_links_for_nested_routes(tmp_path: Path) -> None
 
     assert 'href="../about.html"' in docs_html
     assert 'href="/missing"' in docs_html
+
+
+def test_build_includes_registered_head_assets(tmp_path: Path) -> None:
+    app = AstrisApp()
+    app.add_head_link("https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css")
+    app.add_head_script("https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js")
+
+    @app.page("/")
+    def home():
+        return Div(
+            children=[
+                Text(
+                    "<html><head><title>Home</title></head><body><h1>Hi</h1></body></html>"
+                )
+            ]
+        )
+
+    output_dir = tmp_path / "site"
+    app.build(str(output_dir))
+
+    index_html = (output_dir / "index.html").read_text(encoding="utf-8")
+
+    assert "bootstrap.min.css" in index_html
+    assert "bootstrap.bundle.min.js" in index_html

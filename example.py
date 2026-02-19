@@ -21,6 +21,14 @@ from astris.lib import (
 # 1. Initialize the app
 app = AstrisApp()
 
+# Optional: register external assets for the document <head>
+app.add_head_link(
+    "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+)
+app.add_head_script(
+    "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+)
+
 
 # 2. Define a reusable layout (functional component)
 # This is equivalent to a React/Flutter-style component
@@ -32,19 +40,19 @@ def main_layout(page_title: str, content_slot):
                 children=[
                     # Simple navbar
                     Div(
-                        style="padding: 20px; background: #eee;",
+                        class_name="container py-3",
                         children=[
-                            A(href="/", children=["Inicio"]),
+                            A(href="/", class_name="me-2", children=["Home"]),
                             Text(" | "),
-                            A(href="/about", children=["Sobre Nosotros"]),
+                            A(href="/about", children=["About Us"]),
                         ],
                     ),
                     # Dynamic content
-                    Container(style="padding: 20px;", children=[content_slot]),
+                    Container(class_name="container py-4", children=[content_slot]),
                     # Footer
                     Div(
-                        style="margin-top: 50px; color: #888;",
-                        children=[Text("© 2024 Mi Framework Python")],
+                        class_name="container py-4 text-secondary",
+                        children=[Text("© 2024 My Python Framework")],
                     ),
                 ]
             ),
@@ -58,16 +66,16 @@ def main_layout(page_title: str, content_slot):
 @app.page("/")
 def home():
     return main_layout(
-        page_title="Bienvenido",
+        page_title="Welcome",
         content_slot=Column(
             children=[
-                H1(children=["Hola, Mundo desde Python!"]),
+                H1(children=["Hello, World from Python!"]),
                 P(
                     children=[
-                        "Este sitio fue generado sin escribir una sola línea de HTML puro."
+                        "This site was generated without writing a single line of raw HTML."
                     ]
                 ),
-                A(href="/about", children=["Ir a About ->"]),
+                A(href="/about", children=["Go to About ->"]),
             ]
         ),
     )
@@ -75,14 +83,14 @@ def home():
 
 @app.page("/about")
 def about():
-    features = ["Python Puro", "Hot Reload (vía FastAPI)", "Cero HTML"]
+    features = ["Pure Python", "Hot Reload (via FastAPI)", "Zero HTML"]
 
     return main_layout(
-        page_title="Sobre Nosotros",
+        page_title="About Us",
         content_slot=Column(
             children=[
-                H1(children=["Acerca de este Framework!!"]),
-                H2(children=["Características:"]),
+                H1(children=["About this Framework!!"]),
+                H2(children=["Features:"]),
                 Ul(
                     children=[
                         Li(children=[feat])

@@ -2,6 +2,29 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.1.2] - 2026-02-19
+
+### Added
+- Added `astris/py.typed` to mark the package as typed (PEP 561).
+- Added head asset registration APIs in `AstrisApp`: `add_head_link(...)` and `add_head_script(...)`.
+- Added user documentation site scaffolding with MkDocs in `docs/user/`.
+- Added Read the Docs configuration via `.readthedocs.yml` and `mkdocs.yml`.
+- Added documentation dependency group (`docs`) in `pyproject.toml` and RTD requirements file `docs/requirements-rtd.txt`.
+- Added internal RTD operations guide at `docs/internal/RTD.md`.
+- Added `make docs` and `make docs-serve` commands for local docs workflows.
+- Added `astris build` CLI command to generate static output from `main.py` by default, with optional `--file` support.
+
+### Changed
+- Updated packaging configuration to include `py.typed` in distributed artifacts via `tool.setuptools.package-data`.
+- Fixed consumer-side mypy warning: "Skipping analyzing \"astris\": module is installed, but missing library stubs or py.typed marker".
+- Updated page rendering/build flow to inject registered CSS/JS assets into the document `<head>`.
+- Updated `README.md` and `example.py` with CDN usage examples (Bootstrap).
+- Separated documentation scope into `docs/user/` (public) and `docs/internal/` (maintainer-only).
+- Moved publishing and release-note internal documentation under `docs/internal/`.
+- Added a dedicated docs build job to `.github/workflows/tests.yml`.
+- Updated `README.md` with user vs internal docs separation and local docs commands.
+- Updated CLI docs and quickstart examples to use `astris build`, and aligned `make build` with `uv run astris build --file example.py`.
+
 ## [0.1.1] - 2026-02-18
 
 ### Added

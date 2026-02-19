@@ -43,3 +43,80 @@ def test_main_new_command_returns_success(tmp_path: Path, monkeypatch) -> None:
 
     assert exit_code == 0
     assert (tmp_path / "hello_app" / "main.py").exists()
+
+
+def test_main_build_command_uses_main_py_by_default(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "main.py").write_text(
+        """
+from astris import AstrisApp
+from astris.lib import Body, Html
+
+app = AstrisApp()
+
+
+@app.page("/")
+def home():
+    return Html(children=[Body(children=["hello"])])
+""".strip(),
+        encoding="utf-8",
+    )
+
+    exit_code = cli.main(["build"])
+
+    assert exit_code == 0
+    assert (tmp_path / "dist" / "index.html").exists()
+
+
+def test_main_build_command_supports_custom_file(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "example.py").write_text(
+        """
+from astris import AstrisApp
+from astris.lib import Body, Html
+
+app = AstrisApp()
+
+
+@app.page("/")
+def home():
+    return Html(children=[Body(children=["hello from example"])])
+""".strip(),
+        encoding="utf-8",
+    )
+
+    exit_code = cli.main(["build", "--file", "example.py"])
+
+    assert exit_code == 0
+    output = (tmp_path / "dist" / "index.html").read_text(encoding="utf-8")
+    assert "hello from example" in output
+
+
+def test_main_build_command_fails_if_file_missing(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+
+    exit_code = cli.main(["build"])
+
+    assert exit_code == 2
+
+
+def test_main_build_command_fails_if_app_not_found(tmp_path: Path, monkeypatch) -> None:
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "main.py").write_text("x = 1", encoding="utf-8")
+
+    exit_code = cli.main(["build"])
+
+    assert exit_code == 2
+
+
+def test_main_build_command_fails_if_app_type_is_invalid(
+    tmp_path: Path, monkeypatch
+) -> None:
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "main.py").write_text("app = object()", encoding="utf-8")
+
+    exit_code = cli.main(["build"])
+
+    assert exit_code == 2

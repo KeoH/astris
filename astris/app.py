@@ -2,7 +2,7 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import Dict
+from typing import Dict, List
 from urllib.parse import urlsplit, urlunsplit
 
 import uvicorn
@@ -15,7 +15,56 @@ from .component import Component
 class AstrisApp:
     def __init__(self):
         self.routes: Dict[str, Component] = {}
+        self._head_links: List[Dict[str, str]] = []
+        self._head_scripts: List[Dict[str, str]] = []
         self._fastapi_app = FastAPI()
+
+    def add_head_link(self, href: str, rel: str = "stylesheet", **attributes) -> None:
+        """Register a <link> tag to be injected in the document head."""
+        link_attrs = {"rel": rel, "href": href, **attributes}
+        self._head_links.append({key: str(value) for key, value in link_attrs.items()})
+
+    def add_head_script(self, src: str, **attributes) -> None:
+        """Register a <script> tag to be injected in the document head."""
+        script_attrs = {"src": src, **attributes}
+        self._head_scripts.append(
+            {key: str(value) for key, value in script_attrs.items()}
+        )
+
+    def _render_tag_attributes(self, attributes: Dict[str, str]) -> str:
+        return " ".join([f'{key}="{value}"' for key, value in attributes.items()])
+
+    def _render_head_assets(self) -> str:
+        parts: List[str] = []
+        for link_attrs in self._head_links:
+            attrs = self._render_tag_attributes(link_attrs)
+            parts.append(f"<link {attrs}>")
+
+        for script_attrs in self._head_scripts:
+            attrs = self._render_tag_attributes(script_attrs)
+            parts.append(f"<script {attrs}></script>")
+
+        return "".join(parts)
+
+    def _inject_head_assets(self, html: str) -> str:
+        head_assets = self._render_head_assets()
+        if not head_assets:
+            return html
+
+        head_close_match = re.search(r"</head>", html, re.IGNORECASE)
+        if head_close_match:
+            insert_at = head_close_match.start()
+            return f"{html[:insert_at]}{head_assets}{html[insert_at:]}"
+
+        html_open_match = re.search(r"<html[^>]*>", html, re.IGNORECASE)
+        if html_open_match:
+            insert_at = html_open_match.end()
+            return f"{html[:insert_at]}<head>{head_assets}</head>{html[insert_at:]}"
+
+        return f"<head>{head_assets}</head>{html}"
+
+    def _render_page_html(self, component: Component) -> str:
+        return self._inject_head_assets(component.render())
 
     def page(self, path: str):
         """Decorator to register a page (route)."""
@@ -26,7 +75,7 @@ class AstrisApp:
 
             @self._fastapi_app.get(path, response_class=HTMLResponse)
             async def serve_page():
-                return f"<!DOCTYPE html>{component_tree.render()}"
+                return f"<!DOCTYPE html>{self._render_page_html(component_tree)}"
 
             return func
 
@@ -125,7 +174,9 @@ class AstrisApp:
             filepath = os.path.join(output_dir, filename)
             os.makedirs(os.path.dirname(filepath), exist_ok=True)
 
-            rendered_html = self._rewrite_static_links(path, component.render())
+            rendered_html = self._rewrite_static_links(
+                path, self._render_page_html(component)
+            )
 
             with open(filepath, "w", encoding="utf-8") as f:
                 f.write("<!DOCTYPE html>\n")

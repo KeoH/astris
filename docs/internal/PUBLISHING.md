@@ -22,6 +22,7 @@ Update the version and changelog before publishing:
 
 - Bump `version` in `pyproject.toml`.
 - Update `CHANGELOG.md` with the new entry.
+- Add or update release notes in `docs/internal/releases/<VERSION>.md` for the GitHub release body.
 - Verify that `README.md` and package metadata are still correct.
 
 ## 2) Run local checks
@@ -52,7 +53,7 @@ python -m venv /tmp/astris-smoke
 source /tmp/astris-smoke/bin/activate
 pip install -i https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple astris==<VERSION>
 python -c "import astris; print(astris.__all__)"
-astris new demo_site
+uvx astris new demo_site
 ```
 
 ## 4) Publish to PyPI
@@ -72,8 +73,10 @@ python -m venv /tmp/astris-prod-check
 source /tmp/astris-prod-check/bin/activate
 pip install astris==<VERSION>
 python -c "from astris import AstrisApp; print(AstrisApp)"
-astris new hello_astris
+uvx astris new hello_astris
 ```
+
+Publish the matching GitHub release using the content from `docs/internal/releases/<VERSION>.md`.
 
 ## Common issues
 
@@ -83,3 +86,41 @@ astris new hello_astris
   - Use the active virtual environment binary or reinstall with `uv pip install -e .`.
 - Error due to an existing version:
   - Bump `version` in `pyproject.toml` and build again.
+
+## Release notes template
+
+Create `docs/internal/releases/<VERSION>.md` with the following structure:
+
+```markdown
+# Astris <VERSION>
+
+Release date: <YYYY-MM-DD>
+
+## Highlights
+
+<Short summary of the release focus>
+
+## What's changed
+
+### Added
+- <Item>
+
+### Changed
+- <Item>
+
+### Fixed
+- <Item>
+
+## Why this matters
+
+- <User impact>
+
+## Validation
+
+- `uv run --group dev pyright` -> `<result>`
+- `uv run --group dev pytest` -> `<result>`
+
+## Upgrade notes
+
+<Migration steps or "No migration is required.">
+```

@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "astris"
-version = "0.1.1"
+version = "0.1.2"
 description = "Minimal Python framework for building static websites with component-style APIs."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -35,9 +35,17 @@ dev = [
     "twine>=6.2.0",
     "pyright>=1.1.403",
 ]
+docs = [
+    "mkdocs>=1.6,<2",
+    "mkdocs-material>=9.5,<9.6",
+    "mkdocstrings[python]>=0.30",
+]
 
 [tool.setuptools.packages.find]
 include = ["astris*"]
+
+[tool.setuptools.package-data]
+astris = ["py.typed"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
