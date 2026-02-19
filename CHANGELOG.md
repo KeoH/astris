@@ -2,6 +2,18 @@
 
 All notable changes to this project are documented in this file.
 
+## [Unreleased]
+
+### Added
+- Added broad HTML wrapper coverage in `astris.lib` for the modern standard HTML tag set.
+- Added English docstrings to HTML wrapper classes in `astris.lib`.
+
+### Changed
+- Updated `Element.render()` to correctly render void HTML elements without closing tags.
+- Updated user docs to include `astris.lib` API documentation and wrapper availability notes.
+- Updated tests for expanded wrappers and void-element rendering behavior.
+- Moved layout helpers (`Container`, `Column`, `Row`) to `astris.layout`.
+
 ## [0.1.3] - 2026-02-19
 
 ### Added

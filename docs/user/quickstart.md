@@ -50,3 +50,14 @@ app.add_head_script(
     "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
 )
 ```
+
+## Available HTML wrappers
+
+`astris.lib` includes wrappers for the modern standard HTML tags (A to Z).
+All wrapper classes include short English docstrings, and void tags such as `Img`, `Br`, and `Input` render without closing tags.
+
+Layout helpers are provided by `astris.layout`:
+
+```python
+from astris.layout import Container, Column, Row
+```

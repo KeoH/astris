@@ -53,6 +53,19 @@ if __name__ == "__main__":
 	app.run_dev()
 ```
 
+## HTML tags API
+
+`astris.lib` now provides wrappers for the modern standard HTML tag set (A to Z).
+Each wrapper class includes an English docstring describing the underlying HTML element.
+
+Void elements (for example `Img`, `Br`, `Input`, `Meta`) render without closing tags.
+
+Layout helpers (`Container`, `Column`, `Row`) live in `astris.layout`.
+
+```python
+from astris.layout import Container, Column, Row
+```
+
 ## Head assets (CDN)
 
 You can register external CSS and JavaScript files that Astris injects into the page `<head>`.

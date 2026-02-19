@@ -2,21 +2,9 @@ import sys
 
 # Simulate that astris is an installed package
 from astris import AstrisApp, Text
-from astris.lib import (
-    Html,
-    Head,
-    Body,
-    Title,
-    Div,
-    H1,
-    H2,
-    P,
-    A,
-    Ul,
-    Li,
-    Container,
-    Column,
-)
+from astris.layout import Column
+from astris.bootstrap.heroes import CenteredHero
+from astris.lib import Button, Html, Head, Body, Title, Div, Main
 
 # 1. Initialize the app
 app = AstrisApp()
@@ -32,27 +20,37 @@ app.add_head_script(
 
 # 2. Define a reusable layout (functional component)
 # This is equivalent to a React/Flutter-style component
-def main_layout(page_title: str, content_slot):
+def main_layout(page_title: str):
     return Html(
         children=[
             Head(children=[Title(children=[page_title])]),
             Body(
                 children=[
-                    # Simple navbar
-                    Div(
-                        class_name="container py-3",
+                    Main(
                         children=[
-                            A(href="/", class_name="me-2", children=["Home"]),
-                            Text(" | "),
-                            A(href="/about", children=["About Us"]),
-                        ],
+                            CenteredHero(
+                                title="Astris Framework",
+                                description="Build static sites with pure Python!",
+                                logo_img_url="https://getbootstrap.com/docs/5.3/assets/brand/bootstrap-logo.svg",
+                                actions=[
+                                    Button(
+                                        type="button",
+                                        class_name="btn btn-primary btn-lg px-4 gap-3",
+                                        children=["Get Started"],
+                                    ),
+                                    Button(
+                                        type="button",
+                                        class_name="btn btn-outline-secondary btn-lg px-4",
+                                        children=["Learn More"],
+                                    ),
+                                ],
+                            ),
+                        ]
                     ),
-                    # Dynamic content
-                    Container(class_name="container py-4", children=[content_slot]),
                     # Footer
                     Div(
                         class_name="container py-4 text-secondary",
-                        children=[Text("© 2024 My Python Framework")],
+                        children=[Text("© 2026 Astris")],
                     ),
                 ]
             ),
@@ -65,41 +63,7 @@ def main_layout(page_title: str, content_slot):
 
 @app.page("/")
 def home():
-    return main_layout(
-        page_title="Welcome",
-        content_slot=Column(
-            children=[
-                H1(children=["Hello, World from Python!"]),
-                P(
-                    children=[
-                        "This site was generated without writing a single line of raw HTML."
-                    ]
-                ),
-                A(href="/about", children=["Go to About ->"]),
-            ]
-        ),
-    )
-
-
-@app.page("/about")
-def about():
-    features = ["Pure Python", "Hot Reload (via FastAPI)", "Zero HTML"]
-
-    return main_layout(
-        page_title="About Us",
-        content_slot=Column(
-            children=[
-                H1(children=["About this Framework!!"]),
-                H2(children=["Features:"]),
-                Ul(
-                    children=[
-                        Li(children=[feat])
-                        for feat in features  # List comprehension (Pythonic!)
-                    ]
-                ),
-            ]
-        ),
-    )
+    return main_layout(page_title="Welcome")
 
 
 # 4. Entry point for UV/CLI
