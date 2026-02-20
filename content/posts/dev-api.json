@@ -1,0 +1,8 @@
+{
+  "slug": "dev-api",
+  "title": "Read-only dev API",
+  "summary": "Inspect your content while developing.",
+  "content": "During run_dev, Astris exposes collection endpoints like /api/collections/posts and /api/collections/posts/<slug>.",
+  "author": "Astris Team",
+  "published_at": "2026-02-20"
+}

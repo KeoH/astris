@@ -2,6 +2,25 @@
 
 All notable changes to this project are documented in this file.
 
+<<<<<<< Updated upstream
+=======
+## [Unreleased]
+
+### Added
+- Added broad HTML wrapper coverage in `astris.lib` for the modern standard HTML tag set.
+- Added English docstrings to HTML wrapper classes in `astris.lib`.
+- Added JSON content collection helpers in `astris.content` with `register_json_collection(...)`.
+- Added read-only development JSON endpoints per collection with configurable API prefixes.
+- Added static detail-page generation from JSON entries using a Python template callable/class.
+
+### Changed
+- Updated `Element.render()` to correctly render void HTML elements without closing tags.
+- Updated user docs to include `astris.lib` API documentation and wrapper availability notes.
+- Updated tests for expanded wrappers and void-element rendering behavior.
+- Moved layout helpers (`Container`, `Column`, `Row`) to `astris.layout`.
+- Updated public exports and docs to include JSON collection APIs.
+
+>>>>>>> Stashed changes
 ## [0.1.3] - 2026-02-19
 
 ### Added

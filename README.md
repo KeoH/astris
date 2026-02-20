@@ -53,6 +53,59 @@ if __name__ == "__main__":
 	app.run_dev()
 ```
 
+<<<<<<< Updated upstream
+=======
+## HTML tags API
+
+`astris.lib` now provides wrappers for the modern standard HTML tag set (A to Z).
+Each wrapper class includes an English docstring describing the underlying HTML element.
+
+Void elements (for example `Img`, `Br`, `Input`, `Meta`) render without closing tags.
+
+Layout helpers (`Container`, `Column`, `Row`) live in `astris.layout`.
+
+```python
+from astris.layout import Container, Column, Row
+```
+
+## JSON content collections (read-only)
+
+You can register a folder of `.json` files as a read-only collection and generate detail pages from a Python template.
+
+```python
+from astris import AstrisApp, Text, register_json_collection
+from astris.lib import Body, Div, Html
+
+app = AstrisApp()
+
+
+def post_template(entry: dict):
+	return Html(children=[
+		Body(children=[
+			Div(children=[Text(entry["title"])]),
+		])
+	])
+
+
+posts = register_json_collection(
+	app,
+	name="posts",
+	directory="content/posts",
+	template=post_template,
+	api_prefix="/api/content",
+)
+
+print(posts.page_links())
+```
+
+Generated output:
+
+- Static detail pages: `/posts/<slug>` (built as `dist/posts/<slug>.html`)
+- Dev JSON API (read-only):
+  - `GET /api/content/posts`
+  - `GET /api/content/posts/<slug>`
+
+>>>>>>> Stashed changes
 ## Head assets (CDN)
 
 You can register external CSS and JavaScript files that Astris injects into the page `<head>`.

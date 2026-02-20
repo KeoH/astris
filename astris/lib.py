@@ -40,6 +40,10 @@ class A(Element):
 class Ul(Element):
     tag = "ul"
 
+class Use(Element):
+    """Represents a <use> element in SVG."""
+
+    tag = "use"
 
 class Li(Element):
     tag = "li"
