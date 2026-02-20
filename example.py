@@ -1,10 +1,9 @@
 import sys
+from typing import Optional
 
 # Simulate that astris is an installed package
-from astris import AstrisApp, Text
-from astris.layout import Column
-from astris.bootstrap.heroes import CenteredHero
-from astris.lib import Button, Html, Head, Body, Title, Div, Main
+from astris import AstrisApp, Text, register_json_collection
+from astris.lib import A, Body, Button, Div, H2, Head, Html, P, Title
 
 # 1. Initialize the app
 app = AstrisApp()
@@ -20,33 +19,13 @@ app.add_head_script(
 
 # 2. Define a reusable layout (functional component)
 # This is equivalent to a React/Flutter-style component
-def main_layout(page_title: str):
+def main_layout(page_title: str, children: Optional[list] = None) -> Html:
     return Html(
         children=[
             Head(children=[Title(children=[page_title])]),
             Body(
                 children=[
-                    Main(
-                        children=[
-                            CenteredHero(
-                                title="Astris Framework",
-                                description="Build static sites with pure Python!",
-                                logo_img_url="https://getbootstrap.com/docs/5.3/assets/brand/bootstrap-logo.svg",
-                                actions=[
-                                    Button(
-                                        type="button",
-                                        class_name="btn btn-primary btn-lg px-4 gap-3",
-                                        children=["Get Started"],
-                                    ),
-                                    Button(
-                                        type="button",
-                                        class_name="btn btn-outline-secondary btn-lg px-4",
-                                        children=["Learn More"],
-                                    ),
-                                ],
-                            ),
-                        ]
-                    ),
+                    Div(children=children, class_name="container py-5"),
                     # Footer
                     Div(
                         class_name="container py-4 text-secondary",
@@ -58,12 +37,84 @@ def main_layout(page_title: str):
     )
 
 
+def post_template(entry: dict) -> Html:
+    return main_layout(
+        page_title=entry.get("title", "Post"),
+        children=[
+            Div(
+                class_name="mb-4",
+                children=[
+                    A(href="/posts", class_name="text-decoration-none", children=["← Back to posts"]),
+                ],
+            ),
+            Div(
+                class_name="mb-3",
+                children=[
+                    H2(children=[entry.get("title", "Untitled")]),
+                    P(class_name="text-secondary", children=[entry.get("summary", "")]),
+                    P(
+                        class_name="text-muted",
+                        children=[
+                            f"By {entry.get('author', 'Unknown')} · {entry.get('published_at', 'Unknown date')}"
+                        ],
+                    ),
+                ],
+            ),
+            P(children=[entry.get("content", "")]),
+        ],
+    )
+
+
+posts_collection = register_json_collection(
+    app,
+    name="posts",
+    directory="content/posts",
+    template=post_template,
+    api_prefix="/api/collections",
+)
+
+
 # 3. Define pages (routes)
 
 
 @app.page("/")
 def home():
-    return main_layout(page_title="Welcome")
+
+    return main_layout(
+        page_title="Welcome",
+        children=[
+            Div(
+                class_name="mt-5",
+                children=[
+                    H2(children=["JSON content collection demo"]),
+                    P(
+                        children=[
+                            "Astris is generating static pages from JSON files and exposing a read-only dev API."
+                        ]
+                    ),
+                    A(href="/posts", class_name="btn btn-outline-primary", children=["Browse posts"]),
+                ],
+            ),
+        ],
+    )
+
+
+@app.page("/posts")
+def posts_index():
+    return main_layout(
+        page_title="Posts",
+        children=[
+            H2(children=["Posts"]),
+            P(children=["These links are generated from JSON content files."]),
+            Div(
+                class_name="d-flex flex-column gap-2",
+                children=[
+                    A(href=route, children=[route])
+                    for route in posts_collection.page_links()
+                ],
+            ),
+        ],
+    )
 
 
 # 4. Entry point for UV/CLI

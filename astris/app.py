@@ -2,11 +2,13 @@ import os
 import re
 import sys
 from pathlib import Path
-from typing import Dict, List
+from typing import Any, Dict, List
 from urllib.parse import urlsplit, urlunsplit
 
 import uvicorn
+from fastapi import HTTPException
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 from fastapi.responses import HTMLResponse
 
 from .component import Component
@@ -15,9 +17,85 @@ from .component import Component
 class AstrisApp:
     def __init__(self):
         self.routes: Dict[str, Component] = {}
+        self._collection_entries: Dict[str, List[Dict[str, Any]]] = {}
+        self._collection_api_prefixes: Dict[str, str] = {}
         self._head_links: List[Dict[str, str]] = []
         self._head_scripts: List[Dict[str, str]] = []
         self._fastapi_app = FastAPI()
+
+    def _normalize_route_path(self, path: str) -> str:
+        if not path:
+            raise ValueError("Route path cannot be empty")
+
+        normalized = path if path.startswith("/") else f"/{path}"
+        if len(normalized) > 1:
+            normalized = normalized.rstrip("/")
+        return normalized
+
+    def _register_component_route(self, path: str, component: Component) -> str:
+        normalized_path = self._normalize_route_path(path)
+        if normalized_path in self.routes:
+            raise ValueError(f"Route already registered: {normalized_path}")
+
+        self.routes[normalized_path] = component
+        component_tree = component
+
+        def serve_page():
+            return f"<!DOCTYPE html>{self._render_page_html(component_tree)}"
+
+        self._fastapi_app.add_api_route(
+            normalized_path,
+            serve_page,
+            methods=["GET"],
+            response_class=HTMLResponse,
+        )
+
+        return normalized_path
+
+    def _register_collection_api(
+        self,
+        collection_name: str,
+        entries: List[Dict[str, Any]],
+        api_prefix: str,
+    ) -> None:
+        normalized_prefix = self._normalize_route_path(api_prefix)
+
+        if collection_name in self._collection_api_prefixes:
+            previous = self._collection_api_prefixes[collection_name]
+            if previous != normalized_prefix:
+                raise ValueError(
+                    "Collection already registered with a different API prefix: "
+                    f"{collection_name}"
+                )
+            raise ValueError(f"Collection already registered: {collection_name}")
+
+        self._collection_entries[collection_name] = entries
+        self._collection_api_prefixes[collection_name] = normalized_prefix
+
+        base_path = f"{normalized_prefix}/{collection_name}"
+        collection_entries = self._collection_entries[collection_name]
+
+        def list_entries():
+            return JSONResponse(content=collection_entries)
+
+        def get_entry(slug: str):
+            for item in collection_entries:
+                if item.get("slug") == slug:
+                    return JSONResponse(content=item)
+            raise HTTPException(status_code=404, detail="Collection entry not found")
+
+        self._fastapi_app.add_api_route(
+            base_path,
+            list_entries,
+            methods=["GET"],
+            response_class=JSONResponse,
+        )
+        self._fastapi_app.add_api_route(
+            f"{base_path}/{{slug}}",
+            get_entry,
+            methods=["GET"],
+            response_class=JSONResponse,
+        )
 
     def add_head_link(self, href: str, rel: str = "stylesheet", **attributes) -> None:
         """Register a link tag to be injected in the document head."""
@@ -71,11 +149,7 @@ class AstrisApp:
 
         def decorator(func):
             component_tree = func()
-            self.routes[path] = component_tree
-
-            @self._fastapi_app.get(path, response_class=HTMLResponse)
-            async def serve_page():
-                return f"<!DOCTYPE html>{self._render_page_html(component_tree)}"
+            self._register_component_route(path, component_tree)
 
             return func
 
@@ -111,16 +185,21 @@ class AstrisApp:
         uvicorn.run(self._fastapi_app, host="0.0.0.0", port=port)
 
     def _route_to_filename(self, route: str) -> str:
-        normalized = route if route.startswith("/") else f"/{route}"
+        normalized = self._normalize_route_path(route)
         if normalized == "/":
             return "index.html"
         return f"{normalized.strip('/')}.html"
 
     def _resolve_route(self, path: str) -> str | None:
-        if path in self.routes:
-            return path
+        if not path:
+            return None
 
-        without_slash = path.rstrip("/")
+        normalized_path = self._normalize_route_path(path)
+
+        if normalized_path in self.routes:
+            return normalized_path
+
+        without_slash = normalized_path.rstrip("/")
         if without_slash and without_slash in self.routes:
             return without_slash
 
@@ -140,6 +219,9 @@ class AstrisApp:
 
             split = urlsplit(href_value)
             if split.scheme or split.netloc or split.path.startswith("//"):
+                return match.group(0)
+
+            if split.path and not split.path.startswith("/"):
                 return match.group(0)
 
             resolved_route = self._resolve_route(split.path)
