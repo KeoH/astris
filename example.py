@@ -29,7 +29,7 @@ def main_layout(page_title: str, children: Optional[list] = None) -> Html:
                     # Footer
                     Div(
                         class_name="container py-4 text-secondary",
-                        children=[Text("© 2024 My Python Framework")],
+                        children=[Text("© 2026 Astris")],
                     ),
                 ]
             ),
@@ -79,27 +79,6 @@ posts_collection = register_json_collection(
 
 @app.page("/")
 def home():
-
-    features = [
-        {
-            "icon_class": "collection",
-            "title": "Feature 1",
-            "description": "Description for feature 1.",
-            "href": "#",
-        },
-        {
-            "icon_class": "collection",
-            "title": "Feature 2",
-            "description": "Description for feature 2.",
-            "href": "#",
-        },
-        {
-            "icon_class": "collection",
-            "title": "Feature 3",
-            "description": "Description for feature 3.",
-            "href": "#",
-        },
-    ]
 
     return main_layout(
         page_title="Welcome",

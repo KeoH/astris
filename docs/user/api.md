@@ -1,6 +1,6 @@
 # API Reference
 
-This reference includes only Astris public API exports.
+This reference includes Astris public exports and HTML wrapper helpers.
 
 ## astris
 
@@ -20,6 +20,18 @@ This reference includes only Astris public API exports.
 ## astris.content
 
 ::: astris.content
+    options:
+      show_root_full_path: false
+
+## astris.lib
+
+::: astris.lib
+    options:
+      show_root_full_path: false
+
+## astris.layout
+
+::: astris.layout
     options:
       show_root_full_path: false
 

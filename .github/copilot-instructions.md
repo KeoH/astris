@@ -9,7 +9,8 @@
   - `build()` writes static HTML files to `dist/` and rewrites internal route links.
 - Component system is simple string rendering:
   - `astris/component.py`: `Component` (abstract), `Text`, `Element`.
-  - `astris/lib.py`: HTML tag wrappers + layout helpers (`Container`, `Column`, `Row`).
+  - `astris/lib.py`: HTML tag wrappers.
+  - `astris/layout.py`: layout helpers (`Container`, `Column`, `Row`).
 
 ## Critical behavior to preserve
 - `page()` currently evaluates page functions at decoration time; keep this behavior unless explicitly changing framework semantics.

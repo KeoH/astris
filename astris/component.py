@@ -30,6 +30,22 @@ class Element(Component):
     """
 
     tag: str = "div"
+    VOID_TAGS = {
+        "area",
+        "base",
+        "br",
+        "col",
+        "embed",
+        "hr",
+        "img",
+        "input",
+        "link",
+        "meta",
+        "param",
+        "source",
+        "track",
+        "wbr",
+    }
 
     def __init__(
         self, children: Optional[Sequence[Union[Component, str]]] = None, **attributes
@@ -47,6 +63,9 @@ class Element(Component):
     def render(self) -> str:
         attrs_str = " ".join([f'{k}="{v}"' for k, v in self.attributes.items()])
         attrs_str = f" {attrs_str}" if attrs_str else ""
+
+        if self.tag.lower() in self.VOID_TAGS:
+            return f"<{self.tag}{attrs_str}>"
 
         children_html = ""
         for child in self.children:
