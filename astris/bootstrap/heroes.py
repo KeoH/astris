@@ -2,10 +2,17 @@ from astris.component import Component
 
 from ..lib import Div, Img, H1, P
 
+
 class CenteredHero(Div):
     """A simple centered hero section with a title and description."""
 
-    def __init__(self, title: str, description: str, logo_img_url: str, actions: list[Component] = []):
+    def __init__(
+        self,
+        title: str,
+        description: str,
+        logo_img_url: str,
+        actions: list[Component] = [],
+    ):
         super().__init__(
             class_name="px-4 py-5 my-5 text-center",
             children=[
@@ -27,8 +34,8 @@ class CenteredHero(Div):
                         Div(
                             class_name="d-grid gap-2 d-sm-flex justify-content-sm-center mb-5",
                             children=actions,
-                        )
-                    ]
-                )
+                        ),
+                    ],
+                ),
             ],
         )

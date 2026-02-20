@@ -2,8 +2,8 @@ from typing import Optional
 
 from astris.lib import Div, Svg, Use, H3, P, A
 
+
 class FeatureList(Div):
-    
     def __init__(self, features: list[dict]) -> None:
         super().__init__(
             class_name="row g-4 py-5 row-cols-1 row-cols-lg-3",
@@ -16,15 +16,16 @@ class FeatureList(Div):
                         A(
                             class_name="icon-link",
                             children=["Learn More"],
-                            href=feature.get("href", "#")
+                            href=feature.get("href", "#"),
                         )
                     ],
-                ) for feature in features
-            ]
+                )
+                for feature in features
+            ],
         )
 
-class IconFeature(Div):
 
+class IconFeature(Div):
     def __init__(
         self,
         icon_class: str,
@@ -47,9 +48,9 @@ class IconFeature(Div):
                 ],
             ),
             H3(class_name="fs-2 text-body-emphasis", children=[title]),
-            P(children=[description])
+            P(children=[description]),
         ]
-        
+
         if call_to_action is not None:
             children.extend(call_to_action)
 

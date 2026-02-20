@@ -3,7 +3,7 @@ from typing import Optional
 
 # Simulate that astris is an installed package
 from astris import AstrisApp, Text, register_json_collection
-from astris.lib import A, Body, Button, Div, H2, Head, Html, P, Title
+from astris.lib import A, Body, Div, H2, Head, Html, P, Title
 
 # 1. Initialize the app
 app = AstrisApp()
@@ -44,7 +44,11 @@ def post_template(entry: dict) -> Html:
             Div(
                 class_name="mb-4",
                 children=[
-                    A(href="/posts", class_name="text-decoration-none", children=["← Back to posts"]),
+                    A(
+                        href="/posts",
+                        class_name="text-decoration-none",
+                        children=["← Back to posts"],
+                    ),
                 ],
             ),
             Div(
@@ -92,7 +96,11 @@ def home():
                             "Astris is generating static pages from JSON files and exposing a read-only dev API."
                         ]
                     ),
-                    A(href="/posts", class_name="btn btn-outline-primary", children=["Browse posts"]),
+                    A(
+                        href="/posts",
+                        class_name="btn btn-outline-primary",
+                        children=["Browse posts"],
+                    ),
                 ],
             ),
         ],
