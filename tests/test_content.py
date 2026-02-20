@@ -24,7 +24,9 @@ def _route_endpoint(app: AstrisApp, path: str) -> Callable[..., JSONResponse]:
     raise AssertionError(f"Route not found: {path}")
 
 
-def test_register_json_collection_generates_detail_routes_and_build(tmp_path: Path) -> None:
+def test_register_json_collection_generates_detail_routes_and_build(
+    tmp_path: Path,
+) -> None:
     app = AstrisApp()
     posts_dir = tmp_path / "posts"
     posts_dir.mkdir()
@@ -86,7 +88,9 @@ def test_register_json_collection_exposes_read_only_api(tmp_path: Path) -> None:
         raise AssertionError("Expected HTTPException(404) for missing collection slug")
 
 
-def test_register_json_collection_template_must_return_component(tmp_path: Path) -> None:
+def test_register_json_collection_template_must_return_component(
+    tmp_path: Path,
+) -> None:
     app = AstrisApp()
     posts_dir = tmp_path / "posts"
     posts_dir.mkdir()
@@ -102,4 +106,6 @@ def test_register_json_collection_template_must_return_component(tmp_path: Path)
     except TypeError as exc:
         assert "Component" in str(exc)
     else:
-        raise AssertionError("register_json_collection should fail for invalid template")
+        raise AssertionError(
+            "register_json_collection should fail for invalid template"
+        )

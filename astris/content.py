@@ -80,7 +80,9 @@ def _load_collection_entries(
 
         slug = _slugify(slug_value or json_file.stem)
         if slug in seen_slugs:
-            raise ValueError(f"Duplicate slug '{slug}' in collection directory: {source_dir}")
+            raise ValueError(
+                f"Duplicate slug '{slug}' in collection directory: {source_dir}"
+            )
         seen_slugs.add(slug)
 
         route = f"{route_prefix}/{slug}"

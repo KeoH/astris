@@ -5,12 +5,12 @@ from .content import JsonCollection, JsonCollectionEntry, register_json_collecti
 __version__ = "0.1.3"
 
 __all__ = [
-	"AstrisApp",
-	"Component",
-	"Element",
-	"Text",
-	"JsonCollection",
-	"JsonCollectionEntry",
-	"register_json_collection",
-	"__version__",
+    "AstrisApp",
+    "Component",
+    "Element",
+    "Text",
+    "JsonCollection",
+    "JsonCollectionEntry",
+    "register_json_collection",
+    "__version__",
 ]

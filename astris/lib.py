@@ -336,10 +336,12 @@ class Legend(Element):
 
     tag = "legend"
 
+
 class Use(Element):
     """Represents a <use> element in SVG."""
 
     tag = "use"
+
 
 class Li(Element):
     """Represents a list item."""
