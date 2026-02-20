@@ -2,29 +2,8 @@ import sys
 from typing import Optional
 
 # Simulate that astris is an installed package
-<<<<<<< Updated upstream
-from astris import AstrisApp, Text
-from astris.lib import (
-    Html,
-    Head,
-    Body,
-    Title,
-    Div,
-    H1,
-    H2,
-    P,
-    A,
-    Ul,
-    Li,
-    Container,
-    Column,
-)
-=======
 from astris import AstrisApp, Text, register_json_collection
-from astris.bootstrap.features import FeatureList
-from astris.bootstrap.heroes import CenteredHero
-from astris.lib import A, Body, Button, Div, H2, Head, Html, Main, P, Small, Title
->>>>>>> Stashed changes
+from astris.lib import A, Body, Button, Div, H2, Head, Html, P, Title
 
 # 1. Initialize the app
 app = AstrisApp()
@@ -40,31 +19,13 @@ app.add_head_script(
 
 # 2. Define a reusable layout (functional component)
 # This is equivalent to a React/Flutter-style component
-<<<<<<< Updated upstream
-def main_layout(page_title: str, content_slot):
-=======
 def main_layout(page_title: str, children: Optional[list] = None) -> Html:
->>>>>>> Stashed changes
     return Html(
         children=[
             Head(children=[Title(children=[page_title])]),
             Body(
                 children=[
-<<<<<<< Updated upstream
-                    # Simple navbar
-                    Div(
-                        class_name="container py-3",
-                        children=[
-                            A(href="/", class_name="me-2", children=["Home"]),
-                            Text(" | "),
-                            A(href="/about", children=["About Us"]),
-                        ],
-                    ),
-                    # Dynamic content
-                    Container(class_name="container py-4", children=[content_slot]),
-=======
-                    Main(children=children, class_name="container py-5"),
->>>>>>> Stashed changes
+                    Div(children=children, class_name="container py-5"),
                     # Footer
                     Div(
                         class_name="container py-4 text-secondary",
@@ -91,7 +52,7 @@ def post_template(entry: dict) -> Html:
                 children=[
                     H2(children=[entry.get("title", "Untitled")]),
                     P(class_name="text-secondary", children=[entry.get("summary", "")]),
-                    Small(
+                    P(
                         class_name="text-muted",
                         children=[
                             f"By {entry.get('author', 'Unknown')} · {entry.get('published_at', 'Unknown date')}"
@@ -118,42 +79,6 @@ posts_collection = register_json_collection(
 
 @app.page("/")
 def home():
-<<<<<<< Updated upstream
-    return main_layout(
-        page_title="Welcome",
-        content_slot=Column(
-            children=[
-                H1(children=["Hello, World from Python!"]),
-                P(
-                    children=[
-                        "This site was generated without writing a single line of raw HTML."
-                    ]
-                ),
-                A(href="/about", children=["Go to About ->"]),
-            ]
-        ),
-    )
-
-
-@app.page("/about")
-def about():
-    features = ["Pure Python", "Hot Reload (via FastAPI)", "Zero HTML"]
-
-    return main_layout(
-        page_title="About Us",
-        content_slot=Column(
-            children=[
-                H1(children=["About this Framework!!"]),
-                H2(children=["Features:"]),
-                Ul(
-                    children=[
-                        Li(children=[feat])
-                        for feat in features  # List comprehension (Pythonic!)
-                    ]
-                ),
-            ]
-        ),
-=======
 
     features = [
         {
@@ -179,24 +104,6 @@ def about():
     return main_layout(
         page_title="Welcome",
         children=[
-            CenteredHero(
-                title="Astris Framework",
-                description="Build static sites with pure Python!",
-                logo_img_url="https://getbootstrap.com/docs/5.3/assets/brand/bootstrap-logo.svg",
-                actions=[
-                    Button(
-                        type="button",
-                        class_name="btn btn-primary btn-lg px-4 gap-3",
-                        children=["Get Started"],
-                    ),
-                    Button(
-                        type="button",
-                        class_name="btn btn-outline-secondary btn-lg px-4",
-                        children=["Learn More"],
-                    ),
-                ],
-            ),
-            FeatureList(features=features),
             Div(
                 class_name="mt-5",
                 children=[
@@ -228,7 +135,6 @@ def posts_index():
                 ],
             ),
         ],
->>>>>>> Stashed changes
     )
 
 
