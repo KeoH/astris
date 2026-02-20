@@ -50,8 +50,6 @@ app.add_head_script(
     "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
 )
 ```
-<<<<<<< Updated upstream
-=======
 
 ## Available HTML wrappers
 
@@ -101,4 +99,3 @@ Behavior:
   - `GET /api/collections/<collection>`
   - `GET /api/collections/<collection>/<slug>`
 - Uses `slug` from JSON when present; otherwise it falls back to the file name.
->>>>>>> Stashed changes

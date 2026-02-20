@@ -2,11 +2,12 @@
 
 All notable changes to this project are documented in this file.
 
-<<<<<<< Updated upstream
-=======
-## [Unreleased]
+## [0.1.3] - 2026-02-20
 
 ### Added
+- Added runtime version export as `astris.__version__` in the public API.
+- Added workspace agent skill `release-prep-astris` under `.agent/skills/` to standardize release preparation workflows.
+- Added reusable skill resources for release checklist and internal release note template.
 - Added broad HTML wrapper coverage in `astris.lib` for the modern standard HTML tag set.
 - Added English docstrings to HTML wrapper classes in `astris.lib`.
 - Added JSON content collection helpers in `astris.content` with `register_json_collection(...)`.
@@ -14,23 +15,13 @@ All notable changes to this project are documented in this file.
 - Added static detail-page generation from JSON entries using a Python template callable/class.
 
 ### Changed
+- Updated package version metadata to `0.1.3`.
+- Updated user-facing README with the new workspace skill usage section.
 - Updated `Element.render()` to correctly render void HTML elements without closing tags.
 - Updated user docs to include `astris.lib` API documentation and wrapper availability notes.
 - Updated tests for expanded wrappers and void-element rendering behavior.
 - Moved layout helpers (`Container`, `Column`, `Row`) to `astris.layout`.
 - Updated public exports and docs to include JSON collection APIs.
-
->>>>>>> Stashed changes
-## [0.1.3] - 2026-02-19
-
-### Added
-- Added runtime version export as `astris.__version__` in the public API.
-- Added workspace agent skill `release-prep-astris` under `.agent/skills/` to standardize release preparation workflows.
-- Added reusable skill resources for release checklist and internal release note template.
-
-### Changed
-- Updated package version metadata to `0.1.3`.
-- Updated user-facing README with the new workspace skill usage section.
 
 ## [0.1.2] - 2026-02-19
 

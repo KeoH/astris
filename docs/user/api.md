@@ -16,8 +16,6 @@ This reference includes only Astris public API exports.
         - JsonCollectionEntry
         - register_json_collection
         - __version__
-<<<<<<< Updated upstream
-=======
 
 ## astris.content
 
@@ -36,4 +34,3 @@ This reference includes only Astris public API exports.
 ::: astris.layout
     options:
       show_root_full_path: false
->>>>>>> Stashed changes

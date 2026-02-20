@@ -53,8 +53,6 @@ if __name__ == "__main__":
 	app.run_dev()
 ```
 
-<<<<<<< Updated upstream
-=======
 ## HTML tags API
 
 `astris.lib` now provides wrappers for the modern standard HTML tag set (A to Z).
@@ -105,7 +103,6 @@ Generated output:
   - `GET /api/content/posts`
   - `GET /api/content/posts/<slug>`
 
->>>>>>> Stashed changes
 ## Head assets (CDN)
 
 You can register external CSS and JavaScript files that Astris injects into the page `<head>`.
