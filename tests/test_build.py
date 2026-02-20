@@ -73,8 +73,12 @@ def test_build_rewrites_relative_links_for_nested_routes(tmp_path: Path) -> None
 
 def test_build_includes_registered_head_assets(tmp_path: Path) -> None:
     app = AstrisApp()
-    app.add_head_link("https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css")
-    app.add_head_script("https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js")
+    app.add_head_link(
+        "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    )
+    app.add_head_script(
+        "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
+    )
 
     @app.page("/")
     def home():

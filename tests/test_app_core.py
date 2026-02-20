@@ -1,5 +1,6 @@
 import types
 
+import astris
 from astris import AstrisApp, Text
 from astris.lib import Div
 
@@ -52,7 +53,9 @@ def test_render_page_html_injects_registered_head_assets() -> None:
     assert (
         '<link rel="stylesheet" href="https://cdn.example.com/bootstrap.css">' in html
     )
-    assert '<script src="https://cdn.example.com/app.js" defer="defer"></script>' in html
+    assert (
+        '<script src="https://cdn.example.com/app.js" defer="defer"></script>' in html
+    )
     assert html.index("bootstrap.css") < html.index("</head>")
 
 
@@ -60,7 +63,15 @@ def test_render_page_html_creates_head_when_missing() -> None:
     app = AstrisApp()
     app.add_head_link("https://cdn.example.com/tailwind.css")
 
-    html = app._render_page_html(Div(children=[Text("<html><body>Hello</body></html>")]))
+    html = app._render_page_html(
+        Div(children=[Text("<html><body>Hello</body></html>")])
+    )
 
     assert "<head>" in html
     assert "tailwind.css" in html
+
+
+def test_runtime_version_is_exported() -> None:
+    assert isinstance(astris.__version__, str)
+    assert astris.__version__.count(".") == 2
+    assert "__version__" in astris.__all__

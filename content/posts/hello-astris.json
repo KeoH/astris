@@ -1,0 +1,8 @@
+{
+  "slug": "hello-astris",
+  "title": "Hello Astris",
+  "summary": "A first post powered by JSON content collections.",
+  "content": "Astris can render this post as a static page and expose it through a read-only JSON endpoint.",
+  "author": "Astris Team",
+  "published_at": "2026-02-20"
+}

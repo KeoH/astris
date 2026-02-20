@@ -53,6 +53,56 @@ if __name__ == "__main__":
 	app.run_dev()
 ```
 
+## HTML tags API
+
+`astris.lib` now provides wrappers for the modern standard HTML tag set (A to Z).
+Each wrapper class includes an English docstring describing the underlying HTML element.
+
+Void elements (for example `Img`, `Br`, `Input`, `Meta`) render without closing tags.
+
+Layout helpers (`Container`, `Column`, `Row`) live in `astris.layout`.
+
+```python
+from astris.layout import Container, Column, Row
+```
+
+## JSON content collections (read-only)
+
+You can register a folder of `.json` files as a read-only collection and generate detail pages from a Python template.
+
+```python
+from astris import AstrisApp, Text, register_json_collection
+from astris.lib import Body, Div, Html
+
+app = AstrisApp()
+
+
+def post_template(entry: dict):
+	return Html(children=[
+		Body(children=[
+			Div(children=[Text(entry["title"])]),
+		])
+	])
+
+
+posts = register_json_collection(
+	app,
+	name="posts",
+	directory="content/posts",
+	template=post_template,
+	api_prefix="/api/content",
+)
+
+print(posts.page_links())
+```
+
+Generated output:
+
+- Static detail pages: `/posts/<slug>` (built as `dist/posts/<slug>.html`)
+- Dev JSON API (read-only):
+  - `GET /api/content/posts`
+  - `GET /api/content/posts/<slug>`
+
 ## Head assets (CDN)
 
 You can register external CSS and JavaScript files that Astris injects into the page `<head>`.
@@ -114,3 +164,15 @@ uv run --group dev twine check dist/*.whl dist/*.tar.gz
 ```
 
 `example.py` in this repository is an internal framework demo and not the standard end-user workflow.
+
+## Agent skill: release-prep-astris
+
+This repository includes a workspace skill at `.agent/skills/release-prep-astris`.
+
+Use this skill when preparing a new Astris version and you want a repeatable release-prep workflow that covers:
+
+- Version alignment across project metadata.
+- Changelog and internal release notes updates.
+- Local validation checks (`pytest`, `pyright`, `release-check`).
+
+By default, this skill prepares the repository for release but does not publish artifacts to TestPyPI or PyPI unless explicitly requested.

@@ -23,3 +23,19 @@ def test_element_renders_children_components_and_strings() -> None:
     element = Div(children=[Text("A"), "B", Div(children=["C"])])
 
     assert element.render() == "<div>A B<div>C</div></div>".replace(" ", "")
+
+
+class Img(Element):
+    tag = "img"
+
+
+def test_void_element_renders_without_closing_tag() -> None:
+    image = Img(src="/banner.png", alt="banner")
+
+    assert image.render() == '<img src="/banner.png" alt="banner">'
+
+
+def test_void_element_ignores_children_during_render() -> None:
+    image = Img(children=["fallback"], src="/banner.png")
+
+    assert image.render() == '<img src="/banner.png">'
