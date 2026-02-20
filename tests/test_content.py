@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Callable
+from typing import Callable, cast
 
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
@@ -19,7 +19,7 @@ def _route_endpoint(app: AstrisApp, path: str) -> Callable[..., JSONResponse]:
         if getattr(route, "path", None) == path:
             endpoint = getattr(route, "endpoint", None)
             if callable(endpoint):
-                return endpoint
+                return cast(Callable[..., JSONResponse], endpoint)
             break
     raise AssertionError(f"Route not found: {path}")
 
