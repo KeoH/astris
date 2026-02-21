@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.1.4] - 2026-02-21
+
+### Added
+- TBD
+
+### Changed
+- Updated package version metadata to `0.1.4`.
+
+### Fixed
+- TBD
+
 ## [0.1.3] - 2026-02-20
 
 ### Added
