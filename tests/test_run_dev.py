@@ -1,10 +1,10 @@
 import os
 
-from astris import AstrisApp
+from astris import Astris
 
 
 def test_run_dev_uses_reload_import_string_when_available(monkeypatch) -> None:
-    app = AstrisApp()
+    app = Astris()
     calls = []
 
     monkeypatch.setattr(app, "_infer_import_string", lambda: "example:app._fastapi_app")
@@ -25,7 +25,7 @@ def test_run_dev_uses_reload_import_string_when_available(monkeypatch) -> None:
 
 
 def test_run_dev_falls_back_when_import_string_is_missing(monkeypatch) -> None:
-    app = AstrisApp()
+    app = Astris()
     calls = []
 
     monkeypatch.setattr(app, "_infer_import_string", lambda: None)
@@ -45,7 +45,7 @@ def test_run_dev_falls_back_when_import_string_is_missing(monkeypatch) -> None:
 
 
 def test_run_dev_without_reload_uses_fastapi_app(monkeypatch) -> None:
-    app = AstrisApp()
+    app = Astris()
     calls = []
 
     def fake_run(*args, **kwargs):

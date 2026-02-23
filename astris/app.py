@@ -14,7 +14,7 @@ from fastapi.responses import HTMLResponse
 from .component import Component
 
 
-class AstrisApp:
+class Astris:
     def __init__(self):
         self.routes: Dict[str, Component] = {}
         self._collection_entries: Dict[str, List[Dict[str, Any]]] = {}
@@ -184,10 +184,12 @@ class AstrisApp:
 
         uvicorn.run(self._fastapi_app, host="0.0.0.0", port=port)
 
-    def _route_to_filename(self, route: str) -> str:
+    def _route_to_filename(self, route: str, clean_urls: bool = False) -> str:
         normalized = self._normalize_route_path(route)
         if normalized == "/":
             return "index.html"
+        if clean_urls:
+            return f"{normalized.strip('/')}/index.html"
         return f"{normalized.strip('/')}.html"
 
     def _resolve_route(self, path: str) -> str | None:
@@ -209,8 +211,10 @@ class AstrisApp:
 
         return None
 
-    def _rewrite_static_links(self, current_route: str, html: str) -> str:
-        current_file = self._route_to_filename(current_route)
+    def _rewrite_static_links(
+        self, current_route: str, html: str, clean_urls: bool = False
+    ) -> str:
+        current_file = self._route_to_filename(current_route, clean_urls=clean_urls)
         current_dir = os.path.dirname(current_file) or "."
 
         def replace_href(match: re.Match[str]) -> str:
@@ -228,13 +232,19 @@ class AstrisApp:
             if not resolved_route:
                 return match.group(0)
 
-            target_file = self._route_to_filename(resolved_route)
-            relative_target = os.path.relpath(target_file, start=current_dir).replace(
-                os.sep, "/"
-            )
-            rebuilt_href = urlunsplit(
-                ("", "", relative_target, split.query, split.fragment)
-            )
+            if clean_urls:
+                target_path = "/" if resolved_route == "/" else resolved_route
+                rebuilt_href = urlunsplit(
+                    ("", "", target_path, split.query, split.fragment)
+                )
+            else:
+                target_file = self._route_to_filename(resolved_route)
+                relative_target = os.path.relpath(target_file, start=current_dir).replace(
+                    os.sep, "/"
+                )
+                rebuilt_href = urlunsplit(
+                    ("", "", relative_target, split.query, split.fragment)
+                )
 
             return f"href={quote}{rebuilt_href}{quote}"
 
@@ -244,7 +254,7 @@ class AstrisApp:
             html,
         )
 
-    def build(self, output_dir="dist"):
+    def build(self, output_dir="dist", clean_urls: bool = False):
         """Generate static HTML files."""
         print(f"📦 Building site into ./{output_dir}...")
 
@@ -252,12 +262,14 @@ class AstrisApp:
             os.makedirs(output_dir)
 
         for path, component in self.routes.items():
-            filename = self._route_to_filename(path)
+            filename = self._route_to_filename(path, clean_urls=clean_urls)
             filepath = os.path.join(output_dir, filename)
             os.makedirs(os.path.dirname(filepath), exist_ok=True)
 
             rendered_html = self._rewrite_static_links(
-                path, self._render_page_html(component)
+                path,
+                self._render_page_html(component),
+                clean_urls=clean_urls,
             )
 
             with open(filepath, "w", encoding="utf-8") as f:

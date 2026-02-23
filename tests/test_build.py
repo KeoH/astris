@@ -1,11 +1,11 @@
 from pathlib import Path
 
-from astris import AstrisApp, Text
+from astris import Astris, Text
 from astris.lib import A, Div
 
 
 def test_build_generates_static_files_and_doctype(tmp_path: Path) -> None:
-    app = AstrisApp()
+    app = Astris()
 
     @app.page("/")
     def home():
@@ -47,7 +47,7 @@ def test_build_generates_static_files_and_doctype(tmp_path: Path) -> None:
 
 
 def test_build_rewrites_relative_links_for_nested_routes(tmp_path: Path) -> None:
-    app = AstrisApp()
+    app = Astris()
 
     @app.page("/about")
     def about():
@@ -72,7 +72,7 @@ def test_build_rewrites_relative_links_for_nested_routes(tmp_path: Path) -> None
 
 
 def test_build_includes_registered_head_assets(tmp_path: Path) -> None:
-    app = AstrisApp()
+    app = Astris()
     app.add_head_link(
         "https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
     )
@@ -97,3 +97,38 @@ def test_build_includes_registered_head_assets(tmp_path: Path) -> None:
 
     assert "bootstrap.min.css" in index_html
     assert "bootstrap.bundle.min.js" in index_html
+
+
+def test_build_with_clean_urls_generates_index_folders_and_clean_links(
+    tmp_path: Path,
+) -> None:
+    app = Astris()
+
+    @app.page("/")
+    def home():
+        return Div(children=[A(href="/about", children=["About"])])
+
+    @app.page("/about")
+    def about():
+        return Div(
+            children=[
+                A(href="/", children=["Home"]),
+                A(href="/about?tab=team#top", children=["Anchor"]),
+            ]
+        )
+
+    output_dir = tmp_path / "site"
+    app.build(str(output_dir), clean_urls=True)
+
+    index_file = output_dir / "index.html"
+    about_file = output_dir / "about" / "index.html"
+
+    assert index_file.exists()
+    assert about_file.exists()
+
+    index_html = index_file.read_text(encoding="utf-8")
+    about_html = about_file.read_text(encoding="utf-8")
+
+    assert 'href="/about"' in index_html
+    assert 'href="/"' in about_html
+    assert 'href="/about?tab=team#top"' in about_html

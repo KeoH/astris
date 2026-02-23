@@ -8,7 +8,7 @@ This reference includes Astris public exports and HTML wrapper helpers.
     options:
       show_root_full_path: false
       members:
-        - AstrisApp
+        - Astris
         - Component
         - Element
         - Text
