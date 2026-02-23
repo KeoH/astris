@@ -2,7 +2,7 @@
 
 ## Big picture architecture
 - Core package is `astris/` only. Do not reintroduce legacy `src/` or `main.py`.
-- Public API is exported from `astris/__init__.py` (`AstrisApp`, `Component`, `Element`, `Text`).
+- Public API is exported from `astris/__init__.py` (`Astris`, `Component`, `Element`, `Text`).
 - App lifecycle lives in `astris/app.py`:
   - `@app.page("/route")` registers routes and stores a rendered component tree in `self.routes`.
   - `run_dev()` serves via FastAPI/Uvicorn and supports reload via import string inference.
@@ -41,7 +41,7 @@
 ## Project-specific coding patterns
 - Keep implementation minimal and explicit; avoid introducing heavy abstractions.
 - Prefer extending `Element` for new HTML-like components.
-- Keep internal link rewriting logic centralized in `AstrisApp._rewrite_static_links`.
+- Keep internal link rewriting logic centralized in `Astris._rewrite_static_links`.
 - If adding CLI/entrypoints, preserve compatibility with existing `example.py` workflow unless asked otherwise.
 - Whenever a feature is implemented or modified, evaluate and update `CHANGELOG.md`, public docs in `docs/user/`, `README.md`, and internal release notes in `docs/internal/releases/` when applicable.
 - Write all new/updated documentation in English.

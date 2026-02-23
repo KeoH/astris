@@ -11,7 +11,7 @@ help:
 	@echo "  make dev        - Start development server"
 	@echo "  make build      - Generate static site in dist/"
 	@echo "  make docs       - Build user docs with MkDocs (strict)"
-	@echo "  make docs-serve - Serve user docs locally with live reload"
+	@echo "  make docs-serve - Serve user docs locally with live reload on port 9000"
 	@echo "  make release-check - Run pre-release checks for PyPI publishing"
 	@echo "  make release-upload - Upload built artifacts to PyPI"
 
@@ -45,11 +45,11 @@ docs:
 	uv run --group docs mkdocs build --strict
 
 docs-serve:
-	uv run --group docs mkdocs serve
+	uv run --group docs mkdocs serve -a 127.0.0.1:9000
 
 release-check:
 	uv sync --group dev
-	uv run --group dev python -m pytest
+	uv run --group dev python -m pytest --cov=astris --cov-report=term-missing
 	uv run --group dev python -m build
 	uv run --group dev python -m twine check dist/*.whl dist/*.tar.gz
 

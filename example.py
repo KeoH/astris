@@ -2,11 +2,12 @@ import sys
 from typing import Optional
 
 # Simulate that astris is an installed package
-from astris import AstrisApp, Text, register_json_collection
+from astris import Astris, Text, register_json_collection
+from astris.content import JsonCollection
 from astris.lib import A, Body, Div, H2, Head, Html, P, Title
 
 # 1. Initialize the app
-app = AstrisApp()
+app = Astris()
 
 # Optional: register external assets for the document <head>
 app.add_head_link(
@@ -69,7 +70,7 @@ def post_template(entry: dict) -> Html:
     )
 
 
-posts_collection = register_json_collection(
+posts_collection: JsonCollection = register_json_collection(
     app,
     name="posts",
     directory="content/posts",

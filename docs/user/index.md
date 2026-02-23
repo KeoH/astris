@@ -14,6 +14,8 @@ If you are maintaining the Astris framework itself, use the internal documentati
 pip install astris
 ```
 
+Astris project scaffolds are UV-first and manage dependencies in `pyproject.toml`.
+
 ## Next steps
 
 - Follow the [Quickstart](quickstart.md).
