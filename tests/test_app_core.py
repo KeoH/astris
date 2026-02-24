@@ -1,12 +1,12 @@
 import types
 
 import astris
-from astris import AstrisApp, Text
+from astris import Astris, Text
 from astris.lib import Div
 
 
 def test_page_decorator_registers_route() -> None:
-    app = AstrisApp()
+    app = Astris()
 
     @app.page("/")
     def home():
@@ -17,12 +17,16 @@ def test_page_decorator_registers_route() -> None:
 
 
 def test_route_helpers() -> None:
-    app = AstrisApp()
+    app = Astris()
     app.routes = {"/": Div(), "/about": Div(), "/blog/": Div()}
 
     assert app._route_to_filename("/") == "index.html"
     assert app._route_to_filename("/about") == "about.html"
     assert app._route_to_filename("docs/setup") == "docs/setup.html"
+    assert app._route_to_filename("/about", clean_urls=True) == "about/index.html"
+    assert (
+        app._route_to_filename("docs/setup", clean_urls=True) == "docs/setup/index.html"
+    )
 
     assert app._resolve_route("/about") == "/about"
     assert app._resolve_route("/blog") == "/blog/"
@@ -30,7 +34,7 @@ def test_route_helpers() -> None:
 
 
 def test_infer_import_string_from_main_module(monkeypatch) -> None:
-    app = AstrisApp()
+    app = Astris()
     fake_main = types.SimpleNamespace(__file__="/tmp/example.py")
     monkeypatch.setitem(__import__("sys").modules, "__main__", fake_main)
 
@@ -38,7 +42,7 @@ def test_infer_import_string_from_main_module(monkeypatch) -> None:
 
 
 def test_render_page_html_injects_registered_head_assets() -> None:
-    app = AstrisApp()
+    app = Astris()
     app.add_head_link("https://cdn.example.com/bootstrap.css")
     app.add_head_script("https://cdn.example.com/app.js", defer="defer")
 
@@ -60,7 +64,7 @@ def test_render_page_html_injects_registered_head_assets() -> None:
 
 
 def test_render_page_html_creates_head_when_missing() -> None:
-    app = AstrisApp()
+    app = Astris()
     app.add_head_link("https://cdn.example.com/tailwind.css")
 
     html = app._render_page_html(

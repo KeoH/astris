@@ -2,6 +2,24 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.1.4] - 2026-02-24
+
+### Added
+- Added `astris deploy` CLI command with Cloudflare Pages support via `npx wrangler pages deploy`.
+- Added project configuration support from `pyproject.toml` under `[tool.astris]`.
+- Added environment variable injection from `[tool.astris.env]` for build/deploy workflows.
+- Added public deployment guide at `docs/user/deployment.md`.
+
+### Changed
+- Updated package version metadata to `0.1.4`.
+- Updated static build to optionally generate clean URLs (`route/index.html`) and extensionless internal links.
+- Updated project scaffolding to generate a starter `pyproject.toml` with Astris configuration keys.
+- Updated project scaffolding to be UV-first, removing generated `requirements.txt` and defining dependencies in `pyproject.toml`.
+- Renamed the main application class from `AstrisApp` to `Astris`.
+
+### Fixed
+- Enabled extensionless route navigation for Cloudflare Pages deployments when clean URLs are enabled.
+
 ## [0.1.3] - 2026-02-20
 
 ### Added

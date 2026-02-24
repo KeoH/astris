@@ -5,8 +5,11 @@
 ```bash
 uvx astris new my-project
 cd my-project
+uv sync
 uv run python main.py
 ```
+
+The generated project uses `pyproject.toml` for dependencies and does not include `requirements.txt`.
 
 ## Build static output
 
@@ -14,13 +17,21 @@ uv run python main.py
 uv run astris build
 ```
 
+## Deploy to Cloudflare Pages
+
+```bash
+uv run astris deploy
+```
+
+For full setup (including Git-based deployment in Cloudflare), see `deployment.md`.
+
 ## Minimal app example
 
 ```python
-from astris import AstrisApp
+from astris import Astris
 from astris.lib import Body, H1, Html
 
-app = AstrisApp()
+app = Astris()
 
 
 @app.page("/")
@@ -39,9 +50,9 @@ if __name__ == "__main__":
 ## Add assets in the page head
 
 ```python
-from astris import AstrisApp
+from astris import Astris
 
-app = AstrisApp()
+app = Astris()
 
 app.add_head_link(
     "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
@@ -67,10 +78,10 @@ from astris.layout import Container, Column, Row
 You can register a directory of JSON files as read-only content and render detail pages from a Python template.
 
 ```python
-from astris import AstrisApp, Text, register_json_collection
+from astris import Astris, Text, register_json_collection
 from astris.lib import Body, Div, Html
 
-app = AstrisApp()
+app = Astris()
 
 
 def post_template(entry: dict):

@@ -5,7 +5,7 @@ from typing import Callable, cast
 from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 
-from astris import AstrisApp, Text
+from astris import Astris, Text
 from astris.content import register_json_collection
 from astris.lib import Div
 
@@ -14,7 +14,7 @@ def _write_json(path: Path, payload: dict) -> None:
     path.write_text(json.dumps(payload), encoding="utf-8")
 
 
-def _route_endpoint(app: AstrisApp, path: str) -> Callable[..., JSONResponse]:
+def _route_endpoint(app: Astris, path: str) -> Callable[..., JSONResponse]:
     for route in app._fastapi_app.routes:
         if getattr(route, "path", None) == path:
             endpoint = getattr(route, "endpoint", None)
@@ -27,7 +27,7 @@ def _route_endpoint(app: AstrisApp, path: str) -> Callable[..., JSONResponse]:
 def test_register_json_collection_generates_detail_routes_and_build(
     tmp_path: Path,
 ) -> None:
-    app = AstrisApp()
+    app = Astris()
     posts_dir = tmp_path / "posts"
     posts_dir.mkdir()
 
@@ -51,7 +51,7 @@ def test_register_json_collection_generates_detail_routes_and_build(
 
 
 def test_register_json_collection_exposes_read_only_api(tmp_path: Path) -> None:
-    app = AstrisApp()
+    app = Astris()
     posts_dir = tmp_path / "posts"
     posts_dir.mkdir()
 
@@ -91,7 +91,7 @@ def test_register_json_collection_exposes_read_only_api(tmp_path: Path) -> None:
 def test_register_json_collection_template_must_return_component(
     tmp_path: Path,
 ) -> None:
-    app = AstrisApp()
+    app = Astris()
     posts_dir = tmp_path / "posts"
     posts_dir.mkdir()
     _write_json(posts_dir / "first.json", {"title": "First"})

@@ -72,7 +72,7 @@ Verify public installation:
 python -m venv /tmp/astris-prod-check
 source /tmp/astris-prod-check/bin/activate
 pip install astris==<VERSION>
-python -c "from astris import AstrisApp; print(AstrisApp)"
+python -c "from astris import Astris; print(Astris)"
 uvx astris new hello_astris
 ```
 

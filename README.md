@@ -22,8 +22,11 @@ Create a new project scaffold:
 ```bash
 uvx astris new my-project
 cd my-project
+uv sync
 uv run python main.py
 ```
+
+Generated projects use `pyproject.toml` for dependency management (UV-first), without `requirements.txt`.
 
 Build static files:
 
@@ -31,13 +34,22 @@ Build static files:
 uv run astris build
 ```
 
+Deploy to Cloudflare Pages:
+
+```bash
+uv sync
+uv run astris deploy
+```
+
+`astris deploy` reads deployment settings from `pyproject.toml` under `[tool.astris]`.
+
 ## Basic usage
 
 ```python
-from astris import AstrisApp
+from astris import Astris
 from astris.lib import Body, H1, Html
 
-app = AstrisApp()
+app = Astris()
 
 
 @app.page("/")
@@ -71,10 +83,10 @@ from astris.layout import Container, Column, Row
 You can register a folder of `.json` files as a read-only collection and generate detail pages from a Python template.
 
 ```python
-from astris import AstrisApp, Text, register_json_collection
+from astris import Astris, Text, register_json_collection
 from astris.lib import Body, Div, Html
 
-app = AstrisApp()
+app = Astris()
 
 
 def post_template(entry: dict):
@@ -103,15 +115,31 @@ Generated output:
   - `GET /api/content/posts`
   - `GET /api/content/posts/<slug>`
 
+## Deployment configuration (`pyproject.toml`)
+
+```toml
+[tool.astris.build]
+output_dir = "dist"
+clean_urls = true
+
+[tool.astris.deploy]
+provider = "cloudflare"
+
+[tool.astris.deploy.cloudflare]
+project_name = "your-cloudflare-pages-project"
+```
+
+For full deployment options (CLI deploy and Git-based Cloudflare setup), see `docs/user/deployment.md`.
+
 ## Head assets (CDN)
 
 You can register external CSS and JavaScript files that Astris injects into the page `<head>`.
 This works in both `run_dev()` and `build()` outputs.
 
 ```python
-from astris import AstrisApp
+from astris import Astris
 
-app = AstrisApp()
+app = Astris()
 
 app.add_head_link(
 	"https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
