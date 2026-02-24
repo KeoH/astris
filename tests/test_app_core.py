@@ -25,8 +25,7 @@ def test_route_helpers() -> None:
     assert app._route_to_filename("docs/setup") == "docs/setup.html"
     assert app._route_to_filename("/about", clean_urls=True) == "about/index.html"
     assert (
-        app._route_to_filename("docs/setup", clean_urls=True)
-        == "docs/setup/index.html"
+        app._route_to_filename("docs/setup", clean_urls=True) == "docs/setup/index.html"
     )
 
     assert app._resolve_route("/about") == "/about"

@@ -239,9 +239,9 @@ class Astris:
                 )
             else:
                 target_file = self._route_to_filename(resolved_route)
-                relative_target = os.path.relpath(target_file, start=current_dir).replace(
-                    os.sep, "/"
-                )
+                relative_target = os.path.relpath(
+                    target_file, start=current_dir
+                ).replace(os.sep, "/")
                 rebuilt_href = urlunsplit(
                     ("", "", relative_target, split.query, split.fragment)
                 )

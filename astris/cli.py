@@ -641,7 +641,9 @@ def _run_cloudflare_pages_deploy(
             "Could not run 'npx'. Install Node.js and ensure npx is available."
         ) from error
     except subprocess.CalledProcessError as error:
-        raise CliError(f"Cloudflare deploy failed with exit code {error.returncode}") from error
+        raise CliError(
+            f"Cloudflare deploy failed with exit code {error.returncode}"
+        ) from error
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -662,9 +664,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Python app file to load (default: main.py)",
     )
 
-    deploy_parser = subparsers.add_parser(
-        "deploy", help="Build and deploy static site"
-    )
+    deploy_parser = subparsers.add_parser("deploy", help="Build and deploy static site")
     deploy_parser.add_argument(
         "--file",
         default="main.py",
