@@ -2,7 +2,16 @@ import types
 
 import astris
 from astris import Astris, Text
-from astris.lib import Div
+from astris.lib import Body, Div, Html
+from astris.theme import Theme
+
+
+def test_astris_uses_default_theme_when_not_provided() -> None:
+    app = Astris()
+
+    assert app.theme is not None
+    assert app.theme.extras["name"] == "astris-default"
+    assert app.theme.mode == "light"
 
 
 def test_page_decorator_registers_route() -> None:
@@ -79,3 +88,39 @@ def test_runtime_version_is_exported() -> None:
     assert isinstance(astris.__version__, str)
     assert astris.__version__.count(".") == 2
     assert "__version__" in astris.__all__
+    assert "Theme" in astris.__all__
+
+
+def test_render_page_html_injects_theme_style_and_mode_attribute() -> None:
+    app = Astris(
+        theme=Theme(
+            mode="dark",
+            colors={"bg": "#111111"},
+            spacing={"md": "1rem"},
+        )
+    )
+
+    html = app._render_page_html(
+        Html(children=[Body(children=[Div(children=[Text("home")])])])
+    )
+
+    assert 'data-astris-theme="dark"' in html
+    assert "--color-bg: #111111;" in html
+    assert "--space-md: 1rem;" in html
+    assert "color-scheme: dark;" in html
+    assert '<html data-theme="dark">' in html
+
+
+def test_theme_changes_are_reflected_after_page_registration() -> None:
+    app = Astris(theme=Theme(mode="light", components={"div": {"class_name": "light"}}))
+
+    @app.page("/")
+    def home():
+        return Div(children=["home"])
+
+    first_render = app._render_page_html(app.routes["/"])
+    app.theme = Theme(mode="dark", components={"div": {"class_name": "dark"}})
+    second_render = app._render_page_html(app.routes["/"])
+
+    assert 'class="light"' in first_render
+    assert 'class="dark"' in second_render

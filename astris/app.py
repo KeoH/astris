@@ -12,15 +12,17 @@ from fastapi.responses import JSONResponse
 from fastapi.responses import HTMLResponse
 
 from .component import Component
+from .theme import Theme, activate_theme, create_default_theme, deactivate_theme
 
 
 class Astris:
-    def __init__(self):
+    def __init__(self, theme: Theme | None = None):
         self.routes: Dict[str, Component] = {}
         self._collection_entries: Dict[str, List[Dict[str, Any]]] = {}
         self._collection_api_prefixes: Dict[str, str] = {}
         self._head_links: List[Dict[str, str]] = []
         self._head_scripts: List[Dict[str, str]] = []
+        self.theme: Theme = theme if theme is not None else create_default_theme()
         self._fastapi_app = FastAPI()
 
     def _normalize_route_path(self, path: str) -> str:
@@ -114,6 +116,10 @@ class Astris:
 
     def _render_head_assets(self) -> str:
         parts: List[str] = []
+        if self.theme is not None:
+            theme_css = self.theme.to_style_block()
+            parts.append(f"<style data-astris-theme=\"{self.theme.mode}\">{theme_css}</style>")
+
         for link_attrs in self._head_links:
             attrs = self._render_tag_attributes(link_attrs)
             parts.append(f"<link {attrs}>")
@@ -123,6 +129,21 @@ class Astris:
             parts.append(f"<script {attrs}></script>")
 
         return "".join(parts)
+
+    def _inject_theme_mode(self, html: str) -> str:
+        if self.theme is None:
+            return html
+
+        html_open_match = re.search(r"<html([^>]*)>", html, re.IGNORECASE)
+        if not html_open_match:
+            return html
+
+        html_attributes = html_open_match.group(1)
+        if re.search(r"\sdata-theme\s*=", html_attributes, re.IGNORECASE):
+            return html
+
+        insert_at = html_open_match.end() - 1
+        return f'{html[:insert_at]} data-theme="{self.theme.mode}"{html[insert_at:]}'
 
     def _inject_head_assets(self, html: str) -> str:
         head_assets = self._render_head_assets()
@@ -142,7 +163,14 @@ class Astris:
         return f"<head>{head_assets}</head>{html}"
 
     def _render_page_html(self, component: Component) -> str:
-        return self._inject_head_assets(component.render())
+        token = activate_theme(self.theme)
+        try:
+            html = component.render()
+        finally:
+            deactivate_theme(token)
+
+        html = self._inject_theme_mode(html)
+        return self._inject_head_assets(html)
 
     def page(self, path: str):
         """Decorator to register a page (route)."""

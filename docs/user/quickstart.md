@@ -47,6 +47,27 @@ if __name__ == "__main__":
     app.run_dev()
 ```
 
+## Configure a theme
+
+Use a built-in preset:
+
+```python
+from astris import Astris, create_default_theme
+
+app = Astris(theme=create_default_theme("dark"))
+```
+
+You can also use:
+
+```python
+from astris import Astris, create_soft_theme
+
+app = Astris(theme=create_soft_theme("light"))
+```
+
+For full configuration, component defaults, and runtime switching, see [Themes](themes.md).
+That guide also covers responsive design with `add_media_query(...)`.
+
 ## Add assets in the page head
 
 ```python

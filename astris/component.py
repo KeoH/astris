@@ -1,6 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional, Sequence, Union
 
+from .styles import Style
+
+from .theme import get_active_theme
+
 
 class Component(ABC):
     """Base class for all UI elements (widgets)."""
@@ -50,8 +54,14 @@ class Element(Component):
     def __init__(
         self, children: Optional[Sequence[Union[Component, str]]] = None, **attributes
     ):
+        style = attributes.pop("style", None)
         self.children: List[Union[Component, str]] = list(children) if children else []
         self.attributes = self._process_attributes(attributes)
+        if style is not None:
+            if isinstance(style, Style):
+                self.attributes["style"] = style.to_css()
+            else:
+                self.attributes["style"] = str(style)
 
     def _process_attributes(self, attrs: Dict) -> Dict:
         processed = {}
@@ -61,7 +71,8 @@ class Element(Component):
         return processed
 
     def render(self) -> str:
-        attrs_str = " ".join([f'{k}="{v}"' for k, v in self.attributes.items()])
+        resolved_attributes = self._resolve_attributes()
+        attrs_str = " ".join([f'{k}="{v}"' for k, v in resolved_attributes.items()])
         attrs_str = f" {attrs_str}" if attrs_str else ""
 
         if self.tag.lower() in self.VOID_TAGS:
@@ -75,3 +86,17 @@ class Element(Component):
                 children_html += str(child)
 
         return f"<{self.tag}{attrs_str}>{children_html}</{self.tag}>"
+
+    def _resolve_attributes(self) -> Dict:
+        theme = get_active_theme()
+        if theme is None:
+            return dict(self.attributes)
+
+        theme_defaults = theme.component_defaults(self.tag.lower(), self.__class__.__name__)
+        if not theme_defaults:
+            return dict(self.attributes)
+
+        normalized_defaults = self._process_attributes(theme_defaults)
+        resolved_attributes = dict(normalized_defaults)
+        resolved_attributes.update(self.attributes)
+        return resolved_attributes

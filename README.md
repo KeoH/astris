@@ -65,6 +65,32 @@ if __name__ == "__main__":
 	app.run_dev()
 ```
 
+## Themes
+
+Astris supports configurable and extensible themes via Python API.
+
+Use the dedicated user guide for full details and examples:
+
+- `docs/user/themes.md`
+
+The themes guide includes responsive media query usage with `GlobalStyleSheet.add_media_query(...)`.
+
+Use the built-in default preset:
+
+```python
+from astris import Astris, create_default_theme
+
+app = Astris(theme=create_default_theme("dark"))
+```
+
+Alternative soft preset:
+
+```python
+from astris import Astris, create_soft_theme
+
+app = Astris(theme=create_soft_theme("light"))
+```
+
 ## HTML tags API
 
 `astris.lib` now provides wrappers for the modern standard HTML tag set (A to Z).

@@ -2,11 +2,32 @@
 
 All notable changes to this project are documented in this file.
 
-## [0.1.5] - 2026-03-01
+
+## [0.1.5] - Unreleased
+
+### Added
+- Added an extensible `Theme` API (`astris.theme.Theme`) with token groups for colors, spacing, custom scales, component defaults, and arbitrary extra metadata.
+- Added built-in default theme preset factory `create_default_theme("light" | "dark")`.
+- Added official soft preset factory `create_soft_theme("light" | "dark")` built on top of default theme tokens.
+- Added typed style system in `astris.styles` (`Style`, enums, `EdgeInsets`, and variable-based `Theme`).
+- Added reusable CSS orchestration via `astris.css_generator.GlobalStyleSheet`.
+- Added compatibility modules `astris.components` and `astris.core` (`AstrisApp` alias).
+- Added predefined breakpoint support (`sm`, `md`, `lg`, `xl`, `2xl`) in `GlobalStyleSheet.add_breakpoint(...)`.
+- Added convenience helpers for faster styling: `sx(...)`, `Style.merge(...)`, and `Theme.quick(...)`.
+- Added typed `TextDecoration` helpers and enums in `astris.styles` to compose full `text-decoration` shorthand values (line/style/color/thickness), including multiple lines.
 
 ### Changed
 - Updated package version metadata to `0.1.5`.
 - Prepared release documentation and internal release notes for `0.1.5`.
+- Updated `Astris` to accept `theme=Theme(...)` and inject theme CSS variables into rendered pages.
+- Updated `Astris()` to assign `create_default_theme()` automatically when no theme is provided.
+- Updated page rendering to set `data-theme` and CSS `color-scheme` from theme mode (`light`/`dark`).
+- Updated `Element` rendering to apply theme component defaults at render time with explicit attribute precedence.
+- Updated layout helpers (`Column`, `Row`) to use spacing CSS variables by default.
+- Updated public exports and user docs to include theme APIs.
+- Updated public docs navigation with a dedicated `Styles` page (`docs/user/styles.md`) covering `astris.styles` usage examples.
+- Reorganized public docs by moving theme guidance into dedicated page `docs/user/themes.md` and linking it from quickstart/home navigation.
+- Expanded public docs with explicit media query guidance using `GlobalStyleSheet.add_media_query(...)`.
 
 ### Fixed
 - Aligned release metadata across project files for consistent packaging and distribution workflows.

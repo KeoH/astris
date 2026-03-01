@@ -19,4 +19,6 @@ Astris project scaffolds are UV-first and manage dependencies in `pyproject.toml
 ## Next steps
 
 - Follow the [Quickstart](quickstart.md).
+- Configure design tokens in [Themes](themes.md).
+- Build typed CSS declarations in [Styles](styles.md).
 - Browse the [API reference](api.md).
