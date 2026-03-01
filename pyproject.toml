@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "astris"
-version = "0.1.4"
+version = "0.1.5"
 description = "Minimal Python framework for building static websites with component-style APIs."
 readme = "README.md"
 requires-python = ">=3.11"

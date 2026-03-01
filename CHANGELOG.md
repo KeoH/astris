@@ -2,6 +2,15 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.1.5] - 2026-03-01
+
+### Changed
+- Updated package version metadata to `0.1.5`.
+- Prepared release documentation and internal release notes for `0.1.5`.
+
+### Fixed
+- Aligned release metadata across project files for consistent packaging and distribution workflows.
+
 ## [0.1.4] - 2026-02-24
 
 ### Added
