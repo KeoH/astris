@@ -44,12 +44,6 @@ This reference includes Astris public exports and HTML wrapper helpers.
     options:
       show_root_full_path: false
 
-## astris.core
-
-::: astris.core
-    options:
-      show_root_full_path: false
-
 ## astris.lib
 
 ::: astris.lib
