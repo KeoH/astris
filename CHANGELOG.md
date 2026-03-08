@@ -15,6 +15,7 @@ All notable changes to this project are documented in this file.
 - Added predefined breakpoint support (`sm`, `md`, `lg`, `xl`, `2xl`) in `GlobalStyleSheet.add_breakpoint(...)`.
 - Added convenience helpers for faster styling: `sx(...)`, `Style.merge(...)`, and `Theme.quick(...)`.
 - Added typed `TextDecoration` helpers and enums in `astris.styles` to compose full `text-decoration` shorthand values (line/style/color/thickness), including multiple lines.
+- Added external stylesheet registration in `astris.theme.Theme` via `stylesheets` and `add_stylesheet(...)`.
 
 ### Changed
 - Updated package version metadata to `0.1.5`.
@@ -28,9 +29,13 @@ All notable changes to this project are documented in this file.
 - Updated public docs navigation with a dedicated `Styles` page (`docs/user/styles.md`) covering `astris.styles` usage examples.
 - Reorganized public docs by moving theme guidance into dedicated page `docs/user/themes.md` and linking it from quickstart/home navigation.
 - Expanded public docs with explicit media query guidance using `GlobalStyleSheet.add_media_query(...)`.
+- Expanded public docs with a class-first guide for `Style` + `GlobalStyleSheet` (variants, breakpoints, raw selectors, and integration patterns).
+- Updated head asset rendering order to inject theme external stylesheets before generated theme CSS and app-level head links.
+- Updated link injection to deduplicate repeated stylesheet hrefs across theme and app-level head links.
 
 ### Fixed
 - Aligned release metadata across project files for consistent packaging and distribution workflows.
+- Fixed `Element` style composition so `style=Style(...)` and `styles=[Style(...)]` are merged correctly without runtime errors.
 
 ## [0.1.4] - 2026-02-24
 

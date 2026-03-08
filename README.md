@@ -74,6 +74,7 @@ Use the dedicated user guide for full details and examples:
 - `docs/user/themes.md`
 
 The themes guide includes responsive media query usage with `GlobalStyleSheet.add_media_query(...)`.
+For class-first CSS generation with `Style` + `GlobalStyleSheet`, see `docs/user/styles.md`.
 
 Use the built-in default preset:
 
@@ -90,6 +91,29 @@ from astris import Astris, create_soft_theme
 
 app = Astris(theme=create_soft_theme("light"))
 ```
+
+Load external CSS from `Theme`:
+
+```python
+from astris import Astris, Theme
+
+app = Astris(
+	theme=Theme(
+		mode="light",
+		stylesheets=[
+			"https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css",
+			"/assets/base.css",
+		],
+	)
+)
+```
+
+Rules:
+
+- Allowed stylesheet href formats: `https://...` and `/...`.
+- Head order: theme external stylesheets -> theme generated CSS -> `app.add_head_link(...)`.
+- Links are deduplicated by exact `href` across theme and app-registered links.
+- `build()` does not copy local stylesheet files automatically.
 
 ## HTML tags API
 

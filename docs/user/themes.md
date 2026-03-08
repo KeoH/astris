@@ -31,12 +31,12 @@ card = Div(
 - Enum values provide safer style authoring and IDE completion.
 - Unknown CSS properties are accepted as keyword arguments and converted from `snake_case` to `kebab-case`.
 
-For quick style creation, use `sx(...)` as a shorthand:
+For quick style creation, use `style(...)` as a shorthand:
 
 ```python
-from astris.styles import Display, sx
+from astris.styles import Display, style
 
-inline = sx(display=Display.FLEX, gap="12px", align_items="center")
+inline = style(display=Display.FLEX, gap="12px", align_items="center")
 ```
 
 ## EdgeInsets
@@ -196,9 +196,202 @@ When `app.theme` is set, Astris injects a `<style>` block in `<head>` with:
 
 Astris also injects `data-theme="<mode>"` into `<html>` if that attribute is missing.
 
+## External CSS in Theme
+
+You can register external stylesheets directly in `Theme` and use them as a base layer for your design system.
+
+This works in both `run_dev()` and `build()` output.
+
+### API surface
+
+- `Theme(stylesheets=[...])`
+- `theme.add_stylesheet(href)`
+
+```python
+from astris import Theme
+
+theme = Theme(
+    mode="light",
+    stylesheets=[
+        "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css",
+        "/assets/base.css",
+    ],
+)
+
+theme.add_stylesheet("https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap")
+```
+
+### Accepted href formats
+
+Astris accepts only:
+
+- Absolute HTTPS URLs (for example `https://cdn.example.com/theme.css`)
+- Site-root paths (for example `/assets/base.css`)
+
+Astris rejects relative paths like `assets/base.css`.
+
+### Injection order and cascade
+
+When Astris renders `<head>`, the order is:
+
+1. Theme external stylesheets (`theme.stylesheets`)
+2. Theme generated CSS block (`<style data-astris-theme="...">`)
+3. App-level links (`app.add_head_link(...)`)
+
+This means:
+
+- Theme generated variables/rules can override base external CSS.
+- App-level links can override both if selectors have equal specificity.
+
+### Deduplication by href
+
+Astris deduplicates `<link>` tags by exact `href` string across:
+
+- Theme stylesheets
+- Links added with `app.add_head_link(...)`
+
+The first occurrence wins (stable order).
+
+### Build behavior
+
+`build()` keeps stylesheet links in generated HTML but does not copy local CSS files automatically.
+
+If you use `/assets/base.css`, ensure your deployment serves that file path.
+
+### Example 1: CDN base + theme tokens override
+
+```python
+from astris import Astris, Theme
+
+app = Astris(
+    theme=Theme(
+        mode="light",
+        stylesheets=["https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"],
+        colors={"primary": "#7c3aed"},
+    )
+)
+```
+
+Use this when you want a mature CSS base and keep Astris theme tokens as your override layer.
+
+### Example 2: Local base stylesheet for brand system
+
+```python
+from astris import Astris, Theme
+
+app = Astris(
+    theme=Theme(
+        mode="dark",
+        stylesheets=["/assets/brand-base.css"],
+        colors={"bg": "#0f172a", "fg": "#e2e8f0"},
+    )
+)
+```
+
+This pattern is useful when your organization already owns a global CSS package.
+
+### Example 3: Multiple external stylesheets
+
+```python
+from astris import Theme
+
+theme = Theme(stylesheets=[
+    "https://cdn.jsdelivr.net/npm/normalize.css@8.0.1/normalize.css",
+    "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css",
+    "/assets/app-base.css",
+])
+```
+
+Order in the list is preserved and controls cascade between external files.
+
+### Example 4: Add stylesheets incrementally
+
+```python
+from astris import Theme
+
+theme = Theme(mode="light")
+theme.add_stylesheet("https://cdn.example.com/base.css")
+theme.add_stylesheet("/assets/layout.css")
+```
+
+This is practical when building theme setup across multiple modules.
+
+### Example 5: Deduplication with `app.add_head_link(...)`
+
+```python
+from astris import Astris, Theme
+
+app = Astris(theme=Theme(stylesheets=["https://cdn.example.com/base.css"]))
+
+# Duplicate href: Astris keeps only one <link> for this href.
+app.add_head_link("https://cdn.example.com/base.css")
+app.add_head_link("https://cdn.example.com/overrides.css")
+```
+
+`base.css` appears once; `overrides.css` is added after theme CSS block.
+
+### Example 6: Mixing theme stylesheets with runtime theme switching
+
+```python
+from astris import Astris, Theme
+
+app = Astris(
+    theme=Theme(
+        mode="light",
+        stylesheets=["/assets/base.css"],
+        colors={"bg": "#ffffff", "fg": "#111827"},
+    )
+)
+
+app.theme = Theme(
+    mode="dark",
+    stylesheets=["/assets/base.css"],
+    colors={"bg": "#020617", "fg": "#e2e8f0"},
+)
+```
+
+Shared external CSS can remain stable while mode tokens change.
+
+### Example 7: Query/hash in stylesheet URL
+
+```python
+from astris import Theme
+
+theme = Theme(stylesheets=["https://cdn.example.com/theme.css?v=2026-03-08#core"])
+```
+
+The full `href` string is used for deduplication.
+
+### Example 8: Invalid relative path and fix
+
+```python
+from astris import Theme
+
+# ❌ Invalid: raises ValueError
+# theme = Theme(stylesheets=["assets/base.css"])
+
+# ✅ Valid alternatives
+theme = Theme(stylesheets=["/assets/base.css"])
+# or
+theme.add_stylesheet("https://cdn.example.com/base.css")
+```
+
+### Troubleshooting
+
+- Stylesheet not applied in static build:
+  - Confirm the file is actually served at `/assets/...` by your hosting setup.
+- Unexpected overrides:
+  - Check order: theme external -> theme generated -> app head links.
+- Duplicate links in source config:
+  - Verify exact `href` strings (including query/hash) because dedupe is string-based.
+- Validation error for stylesheet path:
+  - Use only `https://...` or `/...`.
+
 ## GlobalStyleSheet for reusable classes
 
 `GlobalStyleSheet` lets you avoid repeating inline style payload across many components.
+
+For an extensive class-first guide (variants, responsive classes, tokenized classes, pitfalls), see [Styles](styles.md).
 
 ```python
 from astris.css_generator import GlobalStyleSheet

@@ -124,3 +124,53 @@ def test_theme_changes_are_reflected_after_page_registration() -> None:
 
     assert 'class="light"' in first_render
     assert 'class="dark"' in second_render
+
+
+def test_render_page_html_injects_theme_stylesheets_before_theme_style_and_app_links() -> None:
+    app = Astris(
+        theme=Theme(
+            mode="light",
+            stylesheets=[
+                "https://cdn.example.com/base.css",
+                "/assets/site.css",
+            ],
+        )
+    )
+    app.add_head_link("https://cdn.example.com/app.css")
+
+    html = app._render_page_html(
+        Div(
+            children=[
+                Text("<html><head><title>Home</title></head><body>Hello</body></html>")
+            ]
+        )
+    )
+
+    assert 'href="https://cdn.example.com/base.css"' in html
+    assert 'href="/assets/site.css"' in html
+    assert 'href="https://cdn.example.com/app.css"' in html
+    assert html.index('href="https://cdn.example.com/base.css"') < html.index(
+        'data-astris-theme="light"'
+    )
+    assert html.index('href="/assets/site.css"') < html.index(
+        'data-astris-theme="light"'
+    )
+    assert html.index('data-astris-theme="light"') < html.index(
+        'href="https://cdn.example.com/app.css"'
+    )
+
+
+def test_render_page_html_deduplicates_theme_and_app_links_by_href() -> None:
+    app = Astris(theme=Theme(stylesheets=["https://cdn.example.com/base.css"]))
+    app.add_head_link("https://cdn.example.com/base.css")
+    app.add_head_link("https://cdn.example.com/base.css")
+
+    html = app._render_page_html(
+        Div(
+            children=[
+                Text("<html><head><title>Home</title></head><body>Hello</body></html>")
+            ]
+        )
+    )
+
+    assert html.count('href="https://cdn.example.com/base.css"') == 1

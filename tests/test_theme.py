@@ -1,4 +1,5 @@
 import astris
+import pytest
 from astris.theme import Theme, create_default_theme, create_soft_theme
 
 
@@ -10,6 +11,7 @@ def test_theme_from_dict_and_to_css_variables() -> None:
             "spacing": {"md": "1rem"},
             "scales": {"radius": {"md": "8px"}},
             "components": {"button": {"class_name": "btn"}},
+            "stylesheets": ["https://cdn.example.com/base.css", "/assets/site.css"],
             "extras": {"brand": "astris"},
         }
     )
@@ -20,6 +22,7 @@ def test_theme_from_dict_and_to_css_variables() -> None:
     assert variables["--color-bg"] == "#0f0f0f"
     assert variables["--space-md"] == "1rem"
     assert variables["--radius-md"] == "8px"
+    assert theme.stylesheets == ["https://cdn.example.com/base.css", "/assets/site.css"]
     assert theme.extras["brand"] == "astris"
 
 
@@ -30,6 +33,7 @@ def test_theme_extend_merges_nested_mappings() -> None:
         spacing={"sm": "0.5rem"},
         scales={"radius": {"sm": "4px"}},
         components={"div": {"class_name": "surface"}},
+        stylesheets=["https://cdn.example.com/base.css"],
     )
 
     extended = base.extend(
@@ -37,6 +41,7 @@ def test_theme_extend_merges_nested_mappings() -> None:
         colors={"bg": "#000000"},
         scales={"radius": {"md": "8px"}},
         components={"div": {"data_variant": "elevated"}},
+        stylesheets=["/assets/app.css", "https://cdn.example.com/base.css"],
     )
 
     assert base.mode == "light"
@@ -47,6 +52,32 @@ def test_theme_extend_merges_nested_mappings() -> None:
         "class_name": "surface",
         "data_variant": "elevated",
     }
+    assert extended.stylesheets == [
+        "https://cdn.example.com/base.css",
+        "/assets/app.css",
+    ]
+
+
+def test_theme_stylesheets_are_normalized_and_deduplicated() -> None:
+    theme = Theme(
+        stylesheets=[
+            "  https://cdn.example.com/base.css  ",
+            "/assets/site.css",
+            "https://cdn.example.com/base.css",
+        ]
+    )
+
+    assert theme.stylesheets == ["https://cdn.example.com/base.css", "/assets/site.css"]
+
+
+def test_theme_add_stylesheet_rejects_invalid_href() -> None:
+    theme = Theme()
+
+    with pytest.raises(ValueError):
+        theme.add_stylesheet("assets/site.css")
+
+    with pytest.raises(ValueError):
+        theme.add_stylesheet("http://cdn.example.com/base.css")
 
 
 def test_theme_component_defaults_merge_by_key_order() -> None:

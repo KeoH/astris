@@ -72,3 +72,21 @@ If you prefer automatic deploys from your repository:
 ### Notes for clean URLs
 
 With `clean_urls = true`, Astris generates files in folder-based format (`about/index.html`) and your links stay extensionless (`/about`). Cloudflare Pages serves these as clean routes.
+
+## Static assets for theme stylesheets
+
+If your theme includes root-relative stylesheets such as `/assets/base.css`, Astris keeps those links in generated HTML but does not copy asset files during `build()`.
+
+Example:
+
+```python
+from astris import Astris, Theme
+
+app = Astris(theme=Theme(stylesheets=["/assets/base.css"]))
+```
+
+Deployment checklist:
+
+1. Ensure `/assets/base.css` exists in your deployed static output (or is served by your platform).
+2. Keep stylesheet paths stable across environments.
+3. Prefer `/assets/...` over relative paths like `assets/...`.

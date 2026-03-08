@@ -55,13 +55,26 @@ class Element(Component):
         self, children: Optional[Sequence[Union[Component, str]]] = None, **attributes
     ):
         style = attributes.pop("style", None)
+        styles = attributes.pop("styles", None)
+
+        normalized_styles: List[Style] = []
+        if styles is not None:
+            if isinstance(styles, Style):
+                normalized_styles = [styles]
+            else:
+                normalized_styles = list(styles)
+            
         self.children: List[Union[Component, str]] = list(children) if children else []
         self.attributes = self._process_attributes(attributes)
         if style is not None:
             if isinstance(style, Style):
+                style = Style.merge(style, *normalized_styles)
                 self.attributes["style"] = style.to_css()
             else:
                 self.attributes["style"] = str(style)
+        elif normalized_styles:
+            style = Style.merge(*normalized_styles)
+            self.attributes["style"] = style.to_css()
 
     def _process_attributes(self, attrs: Dict) -> Dict:
         processed = {}

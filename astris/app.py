@@ -114,15 +114,39 @@ class Astris:
     def _render_tag_attributes(self, attributes: Dict[str, str]) -> str:
         return " ".join([f'{key}="{value}"' for key, value in attributes.items()])
 
+    def _iter_theme_stylesheet_links(self) -> List[Dict[str, str]]:
+        if self.theme is None:
+            return []
+        return [{"rel": "stylesheet", "href": href} for href in self.theme.stylesheets]
+
+    def _render_link_tags(
+        self,
+        parts: List[str],
+        links: List[Dict[str, str]],
+        seen_hrefs: set[str],
+    ) -> None:
+        for link_attrs in links:
+            href = link_attrs.get("href")
+            if href and href in seen_hrefs:
+                continue
+
+            if href:
+                seen_hrefs.add(href)
+
+            attrs = self._render_tag_attributes(link_attrs)
+            parts.append(f"<link {attrs}>")
+
     def _render_head_assets(self) -> str:
         parts: List[str] = []
+        seen_hrefs: set[str] = set()
+
+        self._render_link_tags(parts, self._iter_theme_stylesheet_links(), seen_hrefs)
+
         if self.theme is not None:
             theme_css = self.theme.to_style_block()
             parts.append(f"<style data-astris-theme=\"{self.theme.mode}\">{theme_css}</style>")
 
-        for link_attrs in self._head_links:
-            attrs = self._render_tag_attributes(link_attrs)
-            parts.append(f"<link {attrs}>")
+        self._render_link_tags(parts, self._head_links, seen_hrefs)
 
         for script_attrs in self._head_scripts:
             attrs = self._render_tag_attributes(script_attrs)

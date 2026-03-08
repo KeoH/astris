@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from contextvars import ContextVar
 from dataclasses import dataclass, field
-from typing import Any, Dict, Literal, Mapping
+from typing import Any, Dict, Iterable, Literal, Mapping
 
 
 _DEFAULT_LIGHT_COLORS: Dict[str, str] = {
@@ -97,6 +97,7 @@ class Theme:
     spacing: Dict[str, str] = field(default_factory=dict)
     scales: Dict[str, Dict[str, str]] = field(default_factory=dict)
     components: Dict[str, Dict[str, str]] = field(default_factory=dict)
+    stylesheets: list[str] = field(default_factory=list)
     extras: Dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -111,6 +112,7 @@ class Theme:
         self.components = {
             key: dict(attributes) for key, attributes in self.components.items()
         }
+        self.stylesheets = _normalize_stylesheets(self.stylesheets)
         self.extras = dict(self.extras)
 
     @classmethod
@@ -128,6 +130,7 @@ class Theme:
                 str(name): dict(values)
                 for name, values in dict(config.get("components", {})).items()
             },
+            stylesheets=list(config.get("stylesheets", [])),
             extras=dict(config.get("extras", {})),
         )
 
@@ -150,14 +153,25 @@ class Theme:
             existing.update(dict(attrs))
             merged_components[str(component_name)] = existing
 
+        additional_stylesheets = list(overrides.pop("stylesheets", []))
+        merged_stylesheets = list(self.stylesheets)
+        merged_stylesheets.extend(additional_stylesheets)
+
         return Theme(
             mode=str(overrides.pop("mode", self.mode)),
             colors={**self.colors, **dict(overrides.pop("colors", {}))},
             spacing={**self.spacing, **dict(overrides.pop("spacing", {}))},
             scales=merged_scales,
             components=merged_components,
+            stylesheets=merged_stylesheets,
             extras={**self.extras, **dict(overrides.pop("extras", {}))},
         )
+
+    def add_stylesheet(self, href: str) -> None:
+        """Register an external stylesheet href for this theme."""
+        normalized_href = _normalize_stylesheet_href(href)
+        if normalized_href not in self.stylesheets:
+            self.stylesheets.append(normalized_href)
 
     def component_defaults(self, *keys: str) -> Dict[str, str]:
         """Return merged defaults for component keys (left to right)."""
@@ -191,7 +205,9 @@ class Theme:
         declarations.append(f"color-scheme: {self.mode};")
 
         declarations_css = " ".join(declarations)
-        return f":root {{ {declarations_css} }}"
+        blocks = [f":root {{ {declarations_css} }}"]
+        blocks.extend(_normalize_extra_css_blocks(self.extras.get("global_css")))
+        return "\n".join(blocks)
 
 
 _ACTIVE_THEME: ContextVar[Theme | None] = ContextVar("astris_active_theme", default=None)
@@ -249,3 +265,48 @@ def create_soft_theme(mode: Literal["light", "dark"] = "light") -> Theme:
         spacing=_SOFT_SPACING,
         extras={"name": "astris-soft", "base": "astris-default"},
     )
+
+
+def _normalize_stylesheet_href(href: str) -> str:
+    normalized = str(href).strip()
+    if not normalized:
+        raise ValueError("Theme stylesheet href cannot be empty")
+
+    if normalized.startswith("https://"):
+        return normalized
+
+    if normalized.startswith("/") and not normalized.startswith("//"):
+        return normalized
+
+    raise ValueError(
+        "Theme stylesheets must use https:// URLs or site-root paths starting with '/'."
+    )
+
+
+def _normalize_stylesheets(stylesheets: Iterable[str]) -> list[str]:
+    normalized_stylesheets: list[str] = []
+    for href in stylesheets:
+        normalized_href = _normalize_stylesheet_href(href)
+        if normalized_href not in normalized_stylesheets:
+            normalized_stylesheets.append(normalized_href)
+    return normalized_stylesheets
+
+
+def _normalize_extra_css_blocks(value: Any) -> list[str]:
+    if value is None:
+        return []
+
+    if isinstance(value, str):
+        css = value.strip()
+        return [css] if css else []
+
+    if isinstance(value, Iterable):
+        blocks: list[str] = []
+        for item in value:
+            css = str(item).strip()
+            if css:
+                blocks.append(css)
+        return blocks
+
+    css = str(value).strip()
+    return [css] if css else []
