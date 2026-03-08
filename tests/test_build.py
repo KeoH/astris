@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from astris import Astris, Text
+from astris import Astris, Text, Theme
 from astris.lib import A, Div
 
 
@@ -132,3 +132,36 @@ def test_build_with_clean_urls_generates_index_folders_and_clean_links(
     assert 'href="/about"' in index_html
     assert 'href="/"' in about_html
     assert 'href="/about?tab=team#top"' in about_html
+
+
+def test_build_includes_theme_stylesheets_and_deduplicates_with_app_links(
+    tmp_path: Path,
+) -> None:
+    app = Astris(
+        theme=Theme(
+            stylesheets=[
+                "https://cdn.example.com/base.css",
+                "/assets/site.css",
+            ]
+        )
+    )
+    app.add_head_link("https://cdn.example.com/base.css")
+
+    @app.page("/docs/intro")
+    def docs_intro():
+        return Div(
+            children=[
+                Text(
+                    "<html><head><title>Docs</title></head><body><h1>Docs</h1></body></html>"
+                )
+            ]
+        )
+
+    output_dir = tmp_path / "site"
+    app.build(str(output_dir))
+
+    docs_html = (output_dir / "docs/intro.html").read_text(encoding="utf-8")
+
+    assert 'href="https://cdn.example.com/base.css"' in docs_html
+    assert 'href="/assets/site.css"' in docs_html
+    assert docs_html.count('href="https://cdn.example.com/base.css"') == 1

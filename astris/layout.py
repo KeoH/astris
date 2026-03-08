@@ -14,8 +14,13 @@ class Column(Div):
     def __init__(
         self, children: Optional[Sequence[Component | str]] = None, **kwargs
     ) -> None:
+        kwargs.setdefault(
+            "style",
+            "display: flex; flex-direction: column; gap: var(--space-md, 1rem);",
+        )
         super().__init__(
-            children, style="display: flex; flex-direction: column;", **kwargs
+            children,
+            **kwargs,
         )
 
 
@@ -25,6 +30,11 @@ class Row(Div):
     def __init__(
         self, children: Optional[Sequence[Component | str]] = None, **kwargs
     ) -> None:
+        kwargs.setdefault(
+            "style",
+            "display: flex; flex-direction: row; gap: var(--space-md, 1rem);",
+        )
         super().__init__(
-            children, style="display: flex; flex-direction: row;", **kwargs
+            children,
+            **kwargs,
         )

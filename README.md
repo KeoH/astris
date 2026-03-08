@@ -65,6 +65,56 @@ if __name__ == "__main__":
 	app.run_dev()
 ```
 
+## Themes
+
+Astris supports configurable and extensible themes via Python API.
+
+Use the dedicated user guide for full details and examples:
+
+- `docs/user/themes.md`
+
+The themes guide includes responsive media query usage with `GlobalStyleSheet.add_media_query(...)`.
+For class-first CSS generation with `Style` + `GlobalStyleSheet`, see `docs/user/styles.md`.
+
+Use the built-in default preset:
+
+```python
+from astris import Astris, create_default_theme
+
+app = Astris(theme=create_default_theme("dark"))
+```
+
+Alternative soft preset:
+
+```python
+from astris import Astris, create_soft_theme
+
+app = Astris(theme=create_soft_theme("light"))
+```
+
+Load external CSS from `Theme`:
+
+```python
+from astris import Astris, Theme
+
+app = Astris(
+	theme=Theme(
+		mode="light",
+		stylesheets=[
+			"https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css",
+			"/assets/base.css",
+		],
+	)
+)
+```
+
+Rules:
+
+- Allowed stylesheet href formats: `https://...` and `/...`.
+- Head order: theme external stylesheets -> theme generated CSS -> `app.add_head_link(...)`.
+- Links are deduplicated by exact `href` across theme and app-registered links.
+- `build()` does not copy local stylesheet files automatically.
+
 ## HTML tags API
 
 `astris.lib` now provides wrappers for the modern standard HTML tag set (A to Z).

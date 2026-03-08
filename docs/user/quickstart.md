@@ -47,6 +47,49 @@ if __name__ == "__main__":
     app.run_dev()
 ```
 
+## Configure a theme
+
+Use a built-in preset:
+
+```python
+from astris import Astris, create_default_theme
+
+app = Astris(theme=create_default_theme("dark"))
+```
+
+You can also use:
+
+```python
+from astris import Astris, create_soft_theme
+
+app = Astris(theme=create_soft_theme("light"))
+```
+
+For full configuration, component defaults, and runtime switching, see [Themes](themes.md).
+That guide also covers responsive design with `add_media_query(...)`.
+
+### Load external CSS from Theme
+
+You can attach external stylesheet links directly to `Theme`:
+
+```python
+from astris import Astris, Theme
+
+app = Astris(
+    theme=Theme(
+        mode="light",
+        stylesheets=[
+            "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css",
+            "/assets/base.css",
+        ],
+    )
+)
+```
+
+Use `https://...` or `/...` href formats.
+
+For ordering, deduplication, and build behavior details, see [Themes](themes.md#external-css-in-theme).
+
 ## Add assets in the page head
 
 ```python

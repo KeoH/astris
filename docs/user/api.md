@@ -9,6 +9,9 @@ This reference includes Astris public exports and HTML wrapper helpers.
       show_root_full_path: false
       members:
         - Astris
+        - Theme
+        - create_default_theme
+        - create_soft_theme
         - Component
         - Element
         - Text
@@ -20,6 +23,24 @@ This reference includes Astris public exports and HTML wrapper helpers.
 ## astris.content
 
 ::: astris.content
+    options:
+      show_root_full_path: false
+
+## astris.styles
+
+::: astris.styles
+    options:
+      show_root_full_path: false
+
+## astris.css_generator
+
+::: astris.css_generator
+    options:
+      show_root_full_path: false
+
+## astris.components
+
+::: astris.components
     options:
       show_root_full_path: false
 
