@@ -3,6 +3,7 @@ from __future__ import annotations
 from contextvars import ContextVar
 from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, Literal, Mapping
+from urllib.parse import urlsplit
 
 
 _DEFAULT_LIGHT_COLORS: Dict[str, str] = {
@@ -272,14 +273,22 @@ def _normalize_stylesheet_href(href: str) -> str:
     if not normalized:
         raise ValueError("Theme stylesheet href cannot be empty")
 
-    if normalized.startswith("https://"):
-        return normalized
+    split = urlsplit(normalized)
+    if split.scheme:
+        if split.scheme == "https":
+            return normalized
+        raise ValueError(
+            "Theme stylesheets must use https:// URLs, site-root paths starting with '/', or relative paths."
+        )
 
     if normalized.startswith("/") and not normalized.startswith("//"):
         return normalized
 
+    if not normalized.startswith("//"):
+        return normalized
+
     raise ValueError(
-        "Theme stylesheets must use https:// URLs or site-root paths starting with '/'."
+        "Theme stylesheets must use https:// URLs, site-root paths starting with '/', or relative paths."
     )
 
 

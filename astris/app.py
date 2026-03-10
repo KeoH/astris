@@ -1,5 +1,6 @@
 import os
 import re
+import shutil
 import sys
 from pathlib import Path
 from typing import Any, Dict, List
@@ -10,6 +11,7 @@ from fastapi import HTTPException
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 from .component import Component
 from .theme import Theme, activate_theme, create_default_theme, deactivate_theme
@@ -24,6 +26,22 @@ class Astris:
         self._head_scripts: List[Dict[str, str]] = []
         self.theme: Theme = theme if theme is not None else create_default_theme()
         self._fastapi_app = FastAPI()
+        self._ensure_assets_mount()
+
+    def _ensure_assets_mount(self, assets_dir: str = "assets") -> None:
+        assets_path = Path(assets_dir)
+        if not assets_path.is_dir():
+            return
+
+        for route in self._fastapi_app.routes:
+            if getattr(route, "path", None) == "/assets":
+                return
+
+        self._fastapi_app.mount(
+            "/assets",
+            StaticFiles(directory=str(assets_path)),
+            name="assets",
+        )
 
     def _normalize_route_path(self, path: str) -> str:
         if not path:
@@ -218,6 +236,7 @@ class Astris:
 
     def run_dev(self, port=8000, reload=True):
         """Start the development server."""
+        self._ensure_assets_mount()
         print(f"🚀 Dev server running at http://localhost:{port}")
 
         if reload:
@@ -278,6 +297,23 @@ class Astris:
                 return match.group(0)
 
             if split.path and not split.path.startswith("/"):
+                normalized_relative_path = split.path
+                if normalized_relative_path.startswith("./"):
+                    normalized_relative_path = normalized_relative_path[2:]
+
+                if (
+                    normalized_relative_path == "assets"
+                    or normalized_relative_path.startswith("assets/")
+                ):
+                    relative_target = os.path.relpath(
+                        normalized_relative_path,
+                        start=current_dir,
+                    ).replace(os.sep, "/")
+                    rebuilt_href = urlunsplit(
+                        ("", "", relative_target, split.query, split.fragment)
+                    )
+                    return f"href={quote}{rebuilt_href}{quote}"
+
                 return match.group(0)
 
             resolved_route = self._resolve_route(split.path)
@@ -306,6 +342,15 @@ class Astris:
             html,
         )
 
+    def _copy_assets_for_build(self, output_dir: str, assets_dir: str = "assets") -> None:
+        assets_path = Path(assets_dir)
+        if not assets_path.is_dir():
+            return
+
+        destination = Path(output_dir) / "assets"
+        shutil.copytree(assets_path, destination, dirs_exist_ok=True)
+        print(f"  ✅ Copied assets: {destination}")
+
     def build(self, output_dir="dist", clean_urls: bool = False):
         """Generate static HTML files."""
         print(f"📦 Building site into ./{output_dir}...")
@@ -329,5 +374,7 @@ class Astris:
                 f.write(rendered_html)
 
             print(f"  ✅ Generated: {filepath}")
+
+        self._copy_assets_for_build(output_dir)
 
         print("✨ Build completed successfully.")

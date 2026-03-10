@@ -110,10 +110,12 @@ app = Astris(
 
 Rules:
 
-- Allowed stylesheet href formats: `https://...` and `/...`.
+- Allowed stylesheet href formats: `https://...`, `/...`, and relative paths such as `assets/base.css`.
 - Head order: theme external stylesheets -> theme generated CSS -> `app.add_head_link(...)`.
 - Links are deduplicated by exact `href` across theme and app-registered links.
-- `build()` does not copy local stylesheet files automatically.
+- `run_dev()` mounts local `./assets` at `/assets` automatically when that directory exists.
+- `build()` copies local `./assets` into `dist/assets` automatically when that directory exists.
+- During `build()`, relative `assets/...` links are rewritten per page depth (for example `../assets/...` in nested routes).
 
 ## HTML tags API
 

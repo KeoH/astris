@@ -32,6 +32,9 @@ All notable changes to this project are documented in this file.
 - Expanded public docs with a class-first guide for `Style` + `GlobalStyleSheet` (variants, breakpoints, raw selectors, and integration patterns).
 - Updated head asset rendering order to inject theme external stylesheets before generated theme CSS and app-level head links.
 - Updated link injection to deduplicate repeated stylesheet hrefs across theme and app-level head links.
+- Updated `Theme` stylesheet validation to accept relative paths (for example `assets/site.css`) in addition to `https://...` and `/...`.
+- Updated `run_dev()` to mount local `./assets` at `/assets` by default when the directory exists.
+- Updated `build()` to copy local `./assets` into output and rewrite relative `assets/...` href values for nested routes.
 
 ### Fixed
 - Aligned release metadata across project files for consistent packaging and distribution workflows.

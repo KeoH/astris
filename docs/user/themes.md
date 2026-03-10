@@ -227,8 +227,15 @@ Astris accepts only:
 
 - Absolute HTTPS URLs (for example `https://cdn.example.com/theme.css`)
 - Site-root paths (for example `/assets/base.css`)
+- Relative paths (for example `assets/base.css`)
 
-Astris rejects relative paths like `assets/base.css`.
+Astris rejects non-HTTPS schemes such as `http://...`.
+
+### Local assets behavior
+
+- In development, `run_dev()` mounts local `./assets` at `/assets` when that directory exists.
+- In static build, `build()` copies local `./assets` to `<output_dir>/assets` when that directory exists.
+- During static build, relative `assets/...` href values are rewritten by route depth so nested pages resolve correctly.
 
 ### Injection order and cascade
 

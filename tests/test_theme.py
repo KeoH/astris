@@ -73,11 +73,14 @@ def test_theme_stylesheets_are_normalized_and_deduplicated() -> None:
 def test_theme_add_stylesheet_rejects_invalid_href() -> None:
     theme = Theme()
 
-    with pytest.raises(ValueError):
-        theme.add_stylesheet("assets/site.css")
+    theme.add_stylesheet("assets/site.css")
+    assert theme.stylesheets == ["assets/site.css"]
 
     with pytest.raises(ValueError):
         theme.add_stylesheet("http://cdn.example.com/base.css")
+
+    with pytest.raises(ValueError):
+        theme.add_stylesheet("mailto:test@example.com")
 
 
 def test_theme_component_defaults_merge_by_key_order() -> None:
