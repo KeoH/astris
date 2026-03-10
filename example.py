@@ -1,8 +1,14 @@
 import sys
 from typing import Optional
 
-# Simulate that astris is an installed package
-from astris import Astris, Text, create_default_theme, create_soft_theme, register_json_collection
+from astris import (
+    Astris,
+    Text,
+    create_default_theme,
+    create_soft_theme,
+    register_json_collection,
+    StyleSheet
+)
 from astris.components import (
     A,
     Body,
@@ -20,139 +26,131 @@ from astris.components import (
     Ul,
 )
 from astris.content import JsonCollection
-from astris.css_generator import GlobalStyleSheet
-from astris.styles import Align, Colors, Display, EdgeInsets, FlexDirection, Style, Theme as CssTheme, style
+from astris.styles import Align, Display, EdgeInsets, FlexDirection, Style, style
 
-# 1. Initialize the app
-# Change this to "default" to use Astris default tokens.
+# Use "default" or "soft" to switch the app-level theme preset.
 THEME_PRESET = "soft"
 
-theme = (
+base_theme = (
     create_soft_theme("dark")
     if THEME_PRESET == "soft"
     else create_default_theme("dark")
 )
 
-app = Astris(theme=theme)
-
-css_theme = CssTheme.quick(
-    name="demo",
-    brand_primary = Colors.INDIGO,
-    surface=Colors.GAINSBORO,
-    text_primary=Colors.REBECCA_PURPLE,
-    text_secondary=Colors.PURPLE,
-    font_sans="Inter, system-ui, sans-serif",
-    extra_tokens={
-        "panel": Colors.DARK_GRAY,
-        "panel_text": Colors.LIGHT_GRAY,
+# Theme controls app-wide tokens and default component attributes.
+theme = base_theme.extend(
+    components={
+        "body": {
+            "style": "margin: 0; background: var(--color-bg); color: var(--color-fg);"
+        },
+        "Section": {"style": "margin-bottom: var(--space-lg);"},
+    },
+    extras={
+        "global_css": [
+            "* { box-sizing: border-box; }",
+            "a { color: inherit; }",
+        ]
     },
 )
 
-stylesheet = GlobalStyleSheet(theme=css_theme)
+app = Astris(theme=theme)
+
+# StyleSheet is a good fit for reusable class-based UI primitives.
+stylesheet = StyleSheet()
+theme.set_stylesheet(stylesheet)
+
+cls_shell = stylesheet.add_class(
+    "shell",
+    Style(
+        max_width="960px",
+        margin="0 auto",
+        padding=EdgeInsets.symmetric(vertical=32, horizontal=20),
+    ),
+    responsive={"md": style(padding=EdgeInsets.symmetric(vertical=24, horizontal=14))},
+)
+
 cls_hero = stylesheet.add_class(
     "hero",
     Style(
         display=Display.FLEX,
         flex_direction=FlexDirection.COLUMN,
-        align_items=Align.START,
-        gap="16px",
-        padding=EdgeInsets.symmetric(vertical=32, horizontal=24),
+        gap="14px",
+        padding=EdgeInsets.symmetric(vertical=28, horizontal=24),
         border_radius="16px",
-        background_color=css_theme.surface,
-        color=css_theme.text_primary,
-        border="1px solid rgba(255,255,255,0.08)",
+        background_color="var(--color-surface)",
+        border="1px solid var(--color-surface-contrast)",
+        selectors={"& h1": Style(margin=0)},
     ),
+    responsive={"md": style(padding=EdgeInsets.symmetric(vertical=20, horizontal=16))},
 )
+
 cls_feature_grid = stylesheet.add_class(
     "feature-grid",
     Style(
         display=Display.GRID,
-        gap="16px",
+        gap="12px",
         grid_template_columns="repeat(auto-fit, minmax(220px, 1fr))",
     ),
+    responsive={"md": style(grid_template_columns="1fr")},
 )
-cls_feature_card = stylesheet.add_class(
-    "feature-card",
+
+cls_card = stylesheet.add_class(
+    "card",
     Style(
-        padding=EdgeInsets.all(32),
+        padding=EdgeInsets.all(18),
         border_radius="12px",
-        background_color=css_theme.surface,
-        color=css_theme.text_primary,
-        border="1px solid rgba(255,255,255,0.10)",
+        background_color="var(--color-surface)",
+        border="1px solid var(--color-surface-contrast)",
+        selectors={"& h2": Style(margin_top=0, margin_bottom="8px")},
     ),
 )
-cls_action_btn = stylesheet.add_class(
-    "action-btn",
+
+cls_btn = stylesheet.add_class(
+    "btn",
     Style(
-        background_color=css_theme.surface,
-        color=css_theme.text_primary,
-        padding=EdgeInsets.symmetric(vertical=10, horizontal=18),
+        display=Display.INLINE_BLOCK,
+        text_decoration="none",
         border="none",
         border_radius="10px",
-        font_weight="600",
+        padding=EdgeInsets.symmetric(vertical=10, horizontal=16),
         cursor="pointer",
-        text_decoration="none",
-        display=Display.INLINE_BLOCK,
+        font_weight="600",
+        background_color="var(--color-primary)",
+        color="var(--color-primary-contrast)",
+        states={
+            "hover": Style(filter="brightness(1.08)", transform="translateY(-1px)")
+        },
     ),
 )
-stylesheet.add_raw(
-    """
-    .action-btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
-    .feature-card h2 { margin-bottom: 6px; }
-    """
-)
-stylesheet.add_media_query(
-    "(max-width: 768px)",
-    {
-        ".hero": Style(padding=EdgeInsets.symmetric(vertical=24, horizontal=16)),
-        ".feature-grid": Style(grid_template_columns="1fr"),
-        ".container": Style(padding="16px"),
-    },
-)
-stylesheet.add_breakpoint(
-    "sm",
-    {
-        ".action-btn": style(width="100%", text_align="center"),
-    },
-)
 
-# Optional: register external assets for the document <head>
-app.add_head_link(
-    "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-)
-app.add_head_script(
-    "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+cls_btn_subtle = stylesheet.add_class(
+    "btn-subtle",
+    Style(
+        background_color="var(--color-surface-contrast)",
+        color="var(--color-fg)",
+    ),
 )
 
 
-# 2. Define a reusable layout (functional component)
-# This is equivalent to a React/Flutter-style component
 def main_layout(page_title: str, children: Optional[list] = None) -> Html:
+    """Single layout used by all routes to keep theming consistent."""
     return Html(
         children=[
-            Head(children=[Title(children=[page_title]), stylesheet.render()]),
+            Head(children=[Title(children=[page_title])]),
             Body(
-                style=Style(
-                    margin=EdgeInsets.all(0),
-                    font_family=css_theme.font_sans,
-                    background_color=css_theme.surface,
-                    color=css_theme.text_secondary,
-                ),
                 children=[
-                    Div(children=children, class_name="container py-5"),
-                    # Footer
+                    Div(class_name=cls_shell, children=children),
                     Div(
-                        class_name="container py-4",
+                        class_name=cls_shell,
                         style=Style(
+                            border_top="1px solid var(--color-surface-contrast)",
                             display=Display.FLEX,
                             justify_content=Align.SPACE_BETWEEN,
                             align_items=Align.CENTER,
-                            color=css_theme.text_secondary,
-                            background_color=css_theme.surface,
-                            border_top="1px solid rgba(255,255,255,0.1)",
+                            color="var(--color-muted)",
                         ),
                         children=[
-                            Text("© 2026 Astris"),
+                            Text("Astris demo"),
                             Span(children=[f"Theme preset: {THEME_PRESET}"]),
                         ],
                     ),
@@ -163,39 +161,33 @@ def main_layout(page_title: str, children: Optional[list] = None) -> Html:
 
 
 def post_template(entry: dict) -> Html:
+    """Template used by register_json_collection for each post page."""
     return main_layout(
         page_title=entry.get("title", "Post"),
         children=[
             Div(
-                class_name="mb-4",
                 children=[
                     A(
                         href="/posts",
-                        class_name="text-decoration-none",
-                        children=["← Back to posts"],
+                        class_name=f"{cls_btn} {cls_btn_subtle}",
+                        children=["Back to posts"],
                     ),
-                ],
+                ]
             ),
-            Div(
-                class_name="mb-3",
-                style=Style(
-                    display=Display.FLEX,
-                    flex_direction=FlexDirection.COLUMN,
-                    gap="8px",
-                    color=css_theme.text_secondary,
-                ),
+            Section(
+                class_name=cls_card,
                 children=[
                     H2(children=[entry.get("title", "Untitled")]),
-                    P(style=Style(color=css_theme.text_secondary), children=[entry.get("summary", "")]),
+                    P(children=[entry.get("summary", "")]),
                     P(
-                        style=Style(color=css_theme.text_secondary),
+                        style=Style(color="var(--color-muted)"),
                         children=[
-                            f"By {entry.get('author', 'Unknown')} · {entry.get('published_at', 'Unknown date')}"
+                            f"By {entry.get('author', 'Unknown')} | {entry.get('published_at', 'Unknown date')}"
                         ],
                     ),
+                    P(children=[entry.get("content", "")]),
                 ],
             ),
-            P(children=[entry.get("content", "")]),
         ],
     )
 
@@ -209,34 +201,30 @@ posts_collection: JsonCollection = register_json_collection(
 )
 
 
-# 3. Define pages (routes)
-
-
 @app.page("/")
-def home():
-
+def home() -> Html:
     return main_layout(
-        page_title="Astris Showcase",
+        page_title="Astris Theme Guide",
         children=[
             Section(
                 class_name=cls_hero,
                 children=[
-                    H1(children=["Astris: Themes + Typed CSS + Reusable Classes"]),
+                    H1(children=["Astris themes in one file"]),
                     P(
                         children=[
-                            "This page demonstrates app themes, typed style objects, reusable CSS classes, and component composition in a single Python file."
+                            "This demo shows a practical relationship between theme tokens, reusable classes, and component composition."
                         ]
                     ),
                     Div(
-                        style=style(display=Display.FLEX, gap="10px"),
+                        style=Style(display=Display.FLEX, gap="10px"),
                         children=[
-                            A(href="/posts", class_name=cls_action_btn, children=["Browse posts"]),
+                            A(
+                                href="/posts",
+                                class_name=cls_btn,
+                                children=["Browse posts"],
+                            ),
                             Button(
-                                class_name=cls_action_btn,
-                                style=Style(
-                                    background_color=css_theme.surface,
-                                    color=css_theme.text_secondary,
-                                ),
+                                class_name=f"{cls_btn} {cls_btn_subtle}",
                                 children=["Secondary action"],
                             ),
                         ],
@@ -244,66 +232,73 @@ def home():
                 ],
             ),
             Section(
-                style=Style(margin=EdgeInsets.only(top=20)),
                 children=[
-                    H2(children=["Feature Cards"]),
+                    H2(children=["How the pieces fit together"]),
                     Div(
                         class_name=cls_feature_grid,
                         children=[
                             Div(
-                                class_name=cls_feature_card,
+                                class_name=cls_card,
                                 children=[
-                                    H2(children=["Typed Style"]),
-                                    P(children=["Use enums and EdgeInsets to avoid CSS typos."]),
+                                    H2(children=["1) Theme"]),
+                                    P(
+                                        children=[
+                                            "Theme controls colors, spacing, scales, and default attributes for components."
+                                        ]
+                                    ),
                                 ],
                             ),
                             Div(
-                                class_name=cls_feature_card,
+                                class_name=cls_card,
                                 children=[
-                                    H2(children=["Theme Tokens"]),
-                                    P(children=["Consume design tokens through CSS variables."]),
+                                    H2(children=["2) Classes"]),
+                                    P(
+                                        children=[
+                                            "StyleSheet provides reusable classes for shared UI building blocks."
+                                        ]
+                                    ),
                                 ],
                             ),
                             Div(
-                                class_name=cls_feature_card,
+                                class_name=cls_card,
                                 children=[
-                                    H2(children=["GlobalStyleSheet"]),
-                                    P(children=["Reuse class names instead of duplicating inline styles."]),
+                                    H2(children=["3) Components"]),
+                                    P(
+                                        children=[
+                                            "Routes compose components with class names and only use inline style for one-off adjustments."
+                                        ]
+                                    ),
                                 ],
                             ),
                         ],
                     ),
-                ],
+                ]
             ),
         ],
     )
 
 
 @app.page("/posts")
-def posts_index():
+def posts_index() -> Html:
     return main_layout(
         page_title="Posts",
         children=[
             H2(children=["Posts"]),
-            P(children=["These links are generated from JSON content files."]),
+            P(children=["Generated from JSON files in content/posts."]),
             Ul(
                 style=Style(
-                    display=Display.FLEX,
-                    flex_direction=FlexDirection.COLUMN,
-                    gap="8px",
                     list_style="none",
                     padding=EdgeInsets.all(0),
+                    display=Display.FLEX,
+                    flex_direction=FlexDirection.COLUMN,
+                    gap="10px",
                 ),
                 children=[
                     Li(
                         children=[
                             A(
                                 href=route,
-                                class_name=cls_action_btn,
-                                style=Style(
-                                    background_color=css_theme.surface,
-                                    color=css_theme.text_secondary,
-                                ),
+                                class_name=f"{cls_btn} {cls_btn_subtle}",
                                 children=[route],
                             )
                         ]
@@ -315,7 +310,6 @@ def posts_index():
     )
 
 
-# 4. Entry point for UV/CLI
 if __name__ == "__main__":
     if len(sys.argv) > 1 and sys.argv[1] == "build":
         app.build()

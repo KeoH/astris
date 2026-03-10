@@ -1,10 +1,10 @@
-from astris.css_generator import GlobalStyleSheet
+from astris.stylesheet import StyleSheet
 from astris.styles import Display, EdgeInsets, Style, Theme
 
 
 def test_global_stylesheet_renders_theme_classes_and_raw_css() -> None:
     theme = Theme(name="default", brand_color="#ff5722", surface="#ffffff")
-    stylesheet = GlobalStyleSheet(theme=theme)
+    stylesheet = StyleSheet(theme=theme)
 
     button_class = stylesheet.add_class(
         "btn-action",
@@ -39,7 +39,7 @@ def test_global_stylesheet_renders_theme_classes_and_raw_css() -> None:
 
 
 def test_global_stylesheet_add_media_query_renders_responsive_rules() -> None:
-    stylesheet = GlobalStyleSheet()
+    stylesheet = StyleSheet()
     stylesheet.add_media_query(
         "(max-width: 768px)",
         {
@@ -55,7 +55,7 @@ def test_global_stylesheet_add_media_query_renders_responsive_rules() -> None:
 
 
 def test_global_stylesheet_predefined_breakpoint_api() -> None:
-    stylesheet = GlobalStyleSheet()
+    stylesheet = StyleSheet()
     stylesheet.add_breakpoint(
         "md",
         {
@@ -69,7 +69,7 @@ def test_global_stylesheet_predefined_breakpoint_api() -> None:
 
 
 def test_global_stylesheet_custom_breakpoint_and_unknown_key() -> None:
-    stylesheet = GlobalStyleSheet()
+    stylesheet = StyleSheet()
     stylesheet.set_breakpoint("tablet", "(max-width: 900px)")
     stylesheet.add_breakpoint("tablet", {".grid": Style(grid_template_columns="1fr")})
 
@@ -81,3 +81,117 @@ def test_global_stylesheet_custom_breakpoint_and_unknown_key() -> None:
         assert False, "Expected ValueError for unknown breakpoint"
     except ValueError as exc:
         assert "Unknown breakpoint" in str(exc)
+
+
+def test_add_class_with_responsive_single_breakpoint() -> None:
+    stylesheet = StyleSheet()
+
+    stylesheet.add_class(
+        "card",
+        Style(padding="16px", display=Display.GRID),
+        responsive={"md": Style(padding="12px")},
+    )
+
+    css = stylesheet.render_css()
+    assert ".card {" in css
+    assert "display: grid;" in css
+    assert "padding: 16px;" in css
+    assert "@media (max-width: 768px) { .card { padding: 12px; } }" in css
+
+
+def test_add_class_with_responsive_multiple_breakpoints() -> None:
+    stylesheet = StyleSheet()
+
+    stylesheet.add_class(
+        "grid",
+        Style(grid_template_columns="repeat(3, 1fr)", gap="24px"),
+        responsive={
+            "lg": Style(grid_template_columns="repeat(2, 1fr)"),
+            "md": Style(grid_template_columns="1fr", gap="12px"),
+        },
+    )
+
+    css = stylesheet.render_css()
+    assert (
+        "@media (max-width: 1024px) { .grid { grid-template-columns: repeat(2, 1fr); } }"
+        in css
+    )
+    assert (
+        "@media (max-width: 768px) { .grid { grid-template-columns: 1fr; gap: 12px; } }"
+        in css
+    )
+
+
+def test_add_class_with_responsive_supports_raw_css_string() -> None:
+    stylesheet = StyleSheet()
+
+    stylesheet.add_class(
+        "btn",
+        Style(padding="10px"),
+        responsive={"sm": "padding: 8px;"},
+    )
+
+    css = stylesheet.render_css()
+    assert "@media (max-width: 640px) { .btn { padding: 8px; } }" in css
+
+
+def test_add_class_with_responsive_rejects_unknown_breakpoint() -> None:
+    stylesheet = StyleSheet()
+
+    try:
+        stylesheet.add_class(
+            "card",
+            Style(padding="16px"),
+            responsive={"phone": Style(padding="8px")},
+        )
+        assert False, "Expected ValueError for unknown breakpoint"
+    except ValueError as exc:
+        assert "Unknown breakpoint 'phone'" in str(exc)
+
+
+def test_add_class_with_empty_responsive_does_not_create_media_rules() -> None:
+    stylesheet = StyleSheet()
+
+    stylesheet.add_class("card", Style(padding="16px"), responsive={})
+
+    css = stylesheet.render_css()
+    assert ".card { padding: 16px; }" in css
+    assert "@media" not in css
+
+
+def test_add_class_renders_style_states_and_selectors() -> None:
+    stylesheet = StyleSheet()
+
+    stylesheet.add_class(
+        "btn",
+        Style(
+            padding="10px",
+            states={"hover": Style(filter="brightness(1.08)")},
+            selectors={":nth-child(odd)": Style(background_color="#fafafa")},
+        ),
+    )
+
+    css = stylesheet.render_css()
+    assert ".btn { padding: 10px; }" in css
+    assert ".btn:hover { filter: brightness(1.08); }" in css
+    assert ".btn:nth-child(odd) { background-color: #fafafa; }" in css
+
+
+def test_add_class_renders_responsive_nested_style_rules() -> None:
+    stylesheet = StyleSheet()
+
+    stylesheet.add_class(
+        "btn",
+        Style(padding="10px"),
+        responsive={
+            "md": Style(
+                padding="8px",
+                states={"hover": Style(filter="brightness(1.02)")},
+            )
+        },
+    )
+
+    css = stylesheet.render_css()
+    assert "@media (max-width: 768px)" in css
+    assert ".btn { padding: 8px; }" in css
+    assert ".btn:hover { filter: brightness(1.02); }" in css

@@ -73,8 +73,12 @@ Use the dedicated user guide for full details and examples:
 
 - `docs/user/themes.md`
 
-The themes guide includes responsive media query usage with `GlobalStyleSheet.add_media_query(...)`.
-For class-first CSS generation with `Style` + `GlobalStyleSheet`, see `docs/user/styles.md`.
+Reference implementation:
+
+- `example.py` (complete flow: theme tokens + reusable CSS classes + routes)
+
+The themes guide includes responsive media query usage with `StyleSheet.add_media_query(...)`.
+For class-first CSS generation with `Style` + `StyleSheet`, see `docs/user/styles.md`.
 
 Use the built-in default preset:
 

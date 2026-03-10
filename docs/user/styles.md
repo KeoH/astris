@@ -1,6 +1,6 @@
 # Styles
 
-`astris.styles` gives you typed CSS building blocks, and `astris.css_generator.GlobalStyleSheet` lets you convert those styles into reusable CSS classes.
+`astris.styles` gives you typed CSS building blocks, and `astris.stylesheet.StyleSheet` lets you convert those styles into reusable CSS classes.
 
 This page is focused on a class-first workflow: define classes once, reuse them across many components.
 
@@ -9,14 +9,14 @@ This page is focused on a class-first workflow: define classes once, reuse them 
 Astris currently has two different `Theme` classes:
 
 - `astris.theme.Theme`: app-level theme for render-time defaults and theme mode.
-- `astris.styles.Theme`: token-based helper for CSS variables in `GlobalStyleSheet`.
+- `astris.styles.Theme`: token-based helper for CSS variables in `StyleSheet`.
 
 In this page, examples that generate classes use `astris.styles.Theme`.
 
 ## Recommended imports for class generation
 
 ```python
-from astris.css_generator import GlobalStyleSheet
+from astris.stylesheet import StyleSheet
 from astris.styles import (
     Align,
     Colors,
@@ -34,11 +34,11 @@ from astris.styles import (
 ## Quick start: register and reuse classes
 
 ```python
-from astris.css_generator import GlobalStyleSheet
+from astris.stylesheet import StyleSheet
 from astris.lib import Div
 from astris.styles import Display, EdgeInsets, Style
 
-stylesheet = GlobalStyleSheet()
+stylesheet = StyleSheet()
 
 card_class = stylesheet.add_class(
     "card",
@@ -91,10 +91,10 @@ button_style = Style.merge(
 ## Build variants from shared base styles
 
 ```python
-from astris.css_generator import GlobalStyleSheet
+from astris.stylesheet import StyleSheet
 from astris.styles import Colors, EdgeInsets, Style
 
-stylesheet = GlobalStyleSheet()
+stylesheet = StyleSheet()
 
 base_badge = Style(
     padding=EdgeInsets.symmetric(vertical=4, horizontal=10),
@@ -117,7 +117,7 @@ badge_warning = stylesheet.add_class(
 ## Use design tokens (`astris.styles.Theme`) in class generation
 
 ```python
-from astris.css_generator import GlobalStyleSheet
+from astris.stylesheet import StyleSheet
 from astris.styles import EdgeInsets, Style, Theme
 
 tokens = Theme.quick(
@@ -128,7 +128,7 @@ tokens = Theme.quick(
     spacing_md="16px",
 )
 
-stylesheet = GlobalStyleSheet(theme=tokens)
+stylesheet = StyleSheet(theme=tokens)
 
 stylesheet.add_class(
     "btn-brand",
@@ -141,15 +141,45 @@ stylesheet.add_class(
 )
 ```
 
-`GlobalStyleSheet(theme=tokens)` emits `:root` CSS variables automatically before class blocks.
+`StyleSheet(theme=tokens)` emits `:root` CSS variables automatically before class blocks.
+
+## Responsive classes in one place (`responsive=`)
+
+`add_class(...)` supports a `responsive` parameter so base class and responsive
+overrides can live in the same definition.
+
+```python
+from astris.stylesheet import StyleSheet
+from astris.styles import EdgeInsets, Style
+
+stylesheet = StyleSheet()
+
+stylesheet.add_class(
+    "feature-grid",
+    Style(display="grid", gap="24px", grid_template_columns="repeat(3, 1fr)"),
+    responsive={
+        "md": Style(grid_template_columns="1fr", gap="12px"),
+    },
+)
+
+stylesheet.add_class(
+    "page-shell",
+    Style(padding="32px 20px"),
+    responsive={
+        "sm": "padding: 16px 12px;",
+    },
+)
+```
+
+`responsive` keys must be named breakpoints (`sm`, `md`, `lg`, `xl`, `2xl`, or custom breakpoints created with `set_breakpoint(...)`).
 
 ## Responsive classes with media queries
 
 ```python
-from astris.css_generator import GlobalStyleSheet
+from astris.stylesheet import StyleSheet
 from astris.styles import Style
 
-stylesheet = GlobalStyleSheet()
+stylesheet = StyleSheet()
 
 stylesheet.add_class(
     "feature-grid",
@@ -168,13 +198,13 @@ Rules in `add_media_query(...)` are selector-based, so keys should include `.` f
 
 ## Responsive classes with named breakpoints
 
-`GlobalStyleSheet` includes predefined names from `PREDEFINED_BREAKPOINTS`.
+`StyleSheet` includes predefined names from `PREDEFINED_BREAKPOINTS`.
 
 ```python
-from astris.css_generator import GlobalStyleSheet
+from astris.stylesheet import StyleSheet
 from astris.styles import EdgeInsets, Style
 
-stylesheet = GlobalStyleSheet()
+stylesheet = StyleSheet()
 
 stylesheet.add_breakpoint(
     "md",
@@ -192,38 +222,64 @@ stylesheet.set_breakpoint("tablet", "(max-width: 900px)")
 stylesheet.add_breakpoint("tablet", {".hero-title": Style(font_size="1.5rem")})
 ```
 
-## Add pseudo-selectors and advanced CSS
+## States and nested selectors in `Style`
 
-Use `add_raw(...)` for selectors that are not class declarations (`:hover`, `@keyframes`, feature queries).
+You can define pseudo-states and structural selectors directly in `Style`.
 
 ```python
-stylesheet.add_raw(".btn-brand:hover { filter: brightness(0.94); }")
+btn = stylesheet.add_class(
+    "btn-brand",
+    Style(
+        background_color="#111827",
+        color="#ffffff",
+        states={
+            "hover": Style(filter="brightness(0.94)"),
+            "focus-visible": "outline: 2px solid #7c3aed;",
+        },
+        selectors={
+            ":nth-child(odd)": Style(transform="translateY(-1px)"),
+            "& > .icon": Style(margin_right="8px"),
+        },
+    ),
+)
+```
+
+Selector rules:
+
+- `states`: accepts keys with or without `:` (`hover` or `:hover`).
+- `selectors` with `&` replace `&` with the class selector.
+- `selectors` starting with `:` are attached directly (`.btn:nth-child(odd)`).
+
+Use `add_raw(...)` for rules not tied to a single class (`@keyframes`, feature queries, or very complex selector groups).
+
+```python
 stylesheet.add_raw("@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }")
 stylesheet.add_raw(".fade-in { animation: fade-in 220ms ease-out; }")
 ```
 
-## Inject the generated stylesheet into your page
+## Attach the generated stylesheet to your theme
 
 ```python
-from astris import Astris, Text
-from astris.css_generator import GlobalStyleSheet
-from astris.lib import Body, Div, Head, Html
+from astris import Astris, Theme
+from astris.stylesheet import StyleSheet
+from astris.lib import Body, Div, Html
 from astris.styles import EdgeInsets, Style
 
-app = Astris()
+theme = Theme(name="Docs Theme")
+app = Astris(theme=theme)
 
-stylesheet = GlobalStyleSheet()
+stylesheet = StyleSheet()
 card_class = stylesheet.add_class(
     "card",
     Style(padding=EdgeInsets.all(16), border="1px solid #e5e7eb", border_radius="12px"),
 )
+theme.set_stylesheet(stylesheet)
 
 
 @app.page("/")
 def home():
     return Html(
         children=[
-            Head(children=[Text(stylesheet.render())]),
             Body(children=[Div(class_name=card_class, children=["Hello classes"])])
         ]
     )
@@ -235,14 +291,16 @@ For large apps, define stylesheet setup in a dedicated module and reuse exported
 
 - Register classes with `add_class(...)` and reuse returned names.
 - Use `Style.merge(...)` for variants instead of duplicating declarations.
-- Put responsive overrides in `add_media_query(...)`/`add_breakpoint(...)`.
-- Use `add_raw(...)` only for advanced selectors and at-rules.
+- Prefer `add_class(..., responsive={...})` for class-local responsive rules.
+- Use `add_media_query(...)`/`add_breakpoint(...)` for multi-selector or advanced responsive rules.
+- Use `states` and `selectors` in `Style(...)` for class-local pseudo/stuctural selectors.
+- Use `add_raw(...)` for at-rules and non class-scoped advanced CSS.
 - Keep class names stable (`card`, `btn-primary`, `feature-grid`) to simplify templates and tests.
 
 ## Common pitfalls
 
 - Using relative selectors in media rules without prefix (`feature-grid` instead of `.feature-grid`).
-- Expecting `GlobalStyleSheet` to auto-inject itself into `<head>` without `stylesheet.render()`.
+- Creating a `StyleSheet` but forgetting to attach it with `theme.set_stylesheet(stylesheet)`.
 - Mixing `astris.theme.Theme` and `astris.styles.Theme` in the same class-generation snippet.
 
 For app-level theming and render-time defaults, see [Themes](themes.md).

@@ -162,7 +162,17 @@ class Astris:
 
         if self.theme is not None:
             theme_css = self.theme.to_style_block()
-            parts.append(f"<style data-astris-theme=\"{self.theme.mode}\">{theme_css}</style>")
+            parts.append(
+                f'<style data-astris-theme="{self.theme.mode}">{theme_css}</style>'
+            )
+
+            theme_stylesheet = self.theme.get_stylesheet()
+            if theme_stylesheet is not None:
+                stylesheet_css = theme_stylesheet.render_css()
+                if stylesheet_css:
+                    parts.append(
+                        f'<style data-astris-theme-classes="{self.theme.mode}">{stylesheet_css}</style>'
+                    )
 
         self._render_link_tags(parts, self._head_links, seen_hrefs)
 
@@ -282,6 +292,56 @@ class Astris:
 
         return None
 
+    def _is_absolute_href(self, split) -> bool:
+        """Check if href is absolute (external link)."""
+        return bool(split.scheme or split.netloc or split.path.startswith("//"))
+
+    def _rewrite_asset_href(self, split, current_dir: str, quote: str) -> str | None:
+        """Rewrite relative asset paths. Returns None if not an asset path."""
+        normalized_relative_path = split.path
+        if normalized_relative_path.startswith("./"):
+            normalized_relative_path = normalized_relative_path[2:]
+
+        is_asset = (
+            normalized_relative_path == "assets"
+            or normalized_relative_path.startswith("assets/")
+        )
+        if not is_asset:
+            return None
+
+        relative_target = os.path.relpath(
+            normalized_relative_path,
+            start=current_dir,
+        ).replace(os.sep, "/")
+        rebuilt_href = urlunsplit(
+            ("", "", relative_target, split.query, split.fragment)
+        )
+        return f"href={quote}{rebuilt_href}{quote}"
+
+    def _rewrite_route_href(
+        self, split, current_dir: str, clean_urls: bool, quote: str
+    ) -> str | None:
+        """Rewrite absolute route paths. Returns None if route not found."""
+        resolved_route = self._resolve_route(split.path)
+        if not resolved_route:
+            return None
+
+        if clean_urls:
+            target_path = "/" if resolved_route == "/" else resolved_route
+            rebuilt_href = urlunsplit(
+                ("", "", target_path, split.query, split.fragment)
+            )
+        else:
+            target_file = self._route_to_filename(resolved_route)
+            relative_target = os.path.relpath(target_file, start=current_dir).replace(
+                os.sep, "/"
+            )
+            rebuilt_href = urlunsplit(
+                ("", "", relative_target, split.query, split.fragment)
+            )
+
+        return f"href={quote}{rebuilt_href}{quote}"
+
     def _rewrite_static_links(
         self, current_route: str, html: str, clean_urls: bool = False
     ) -> str:
@@ -291,50 +351,21 @@ class Astris:
         def replace_href(match: re.Match[str]) -> str:
             quote = match.group("quote")
             href_value = match.group("href")
-
             split = urlsplit(href_value)
-            if split.scheme or split.netloc or split.path.startswith("//"):
+
+            if self._is_absolute_href(split):
                 return match.group(0)
 
             if split.path and not split.path.startswith("/"):
-                normalized_relative_path = split.path
-                if normalized_relative_path.startswith("./"):
-                    normalized_relative_path = normalized_relative_path[2:]
-
-                if (
-                    normalized_relative_path == "assets"
-                    or normalized_relative_path.startswith("assets/")
-                ):
-                    relative_target = os.path.relpath(
-                        normalized_relative_path,
-                        start=current_dir,
-                    ).replace(os.sep, "/")
-                    rebuilt_href = urlunsplit(
-                        ("", "", relative_target, split.query, split.fragment)
-                    )
-                    return f"href={quote}{rebuilt_href}{quote}"
-
+                asset_result = self._rewrite_asset_href(split, current_dir, quote)
+                if asset_result is not None:
+                    return asset_result
                 return match.group(0)
 
-            resolved_route = self._resolve_route(split.path)
-            if not resolved_route:
-                return match.group(0)
-
-            if clean_urls:
-                target_path = "/" if resolved_route == "/" else resolved_route
-                rebuilt_href = urlunsplit(
-                    ("", "", target_path, split.query, split.fragment)
-                )
-            else:
-                target_file = self._route_to_filename(resolved_route)
-                relative_target = os.path.relpath(
-                    target_file, start=current_dir
-                ).replace(os.sep, "/")
-                rebuilt_href = urlunsplit(
-                    ("", "", relative_target, split.query, split.fragment)
-                )
-
-            return f"href={quote}{rebuilt_href}{quote}"
+            route_result = self._rewrite_route_href(
+                split, current_dir, clean_urls, quote
+            )
+            return route_result if route_result is not None else match.group(0)
 
         return re.sub(
             r'href=(?P<quote>["\'])(?P<href>.*?)(?P=quote)',
@@ -342,7 +373,9 @@ class Astris:
             html,
         )
 
-    def _copy_assets_for_build(self, output_dir: str, assets_dir: str = "assets") -> None:
+    def _copy_assets_for_build(
+        self, output_dir: str, assets_dir: str = "assets"
+    ) -> None:
         assets_path = Path(assets_dir)
         if not assets_path.is_dir():
             return

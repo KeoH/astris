@@ -5,6 +5,8 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, Literal, Mapping
 from urllib.parse import urlsplit
 
+from .stylesheet import StyleSheet
+
 
 _DEFAULT_LIGHT_COLORS: Dict[str, str] = {
     "bg": "#ffffff",
@@ -99,6 +101,7 @@ class Theme:
     scales: Dict[str, Dict[str, str]] = field(default_factory=dict)
     components: Dict[str, Dict[str, str]] = field(default_factory=dict)
     stylesheets: list[str] = field(default_factory=list)
+    stylesheet: StyleSheet | None = None
     extras: Dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -137,9 +140,7 @@ class Theme:
 
     def extend(self, **overrides: Any) -> "Theme":
         """Return a new Theme merged with partial overrides."""
-        merged_scales = {
-            name: dict(values) for name, values in self.scales.items()
-        }
+        merged_scales = {name: dict(values) for name, values in self.scales.items()}
         merged_components = {
             name: dict(values) for name, values in self.components.items()
         }
@@ -165,6 +166,7 @@ class Theme:
             scales=merged_scales,
             components=merged_components,
             stylesheets=merged_stylesheets,
+            stylesheet=overrides.pop("stylesheet", self.stylesheet),
             extras={**self.extras, **dict(overrides.pop("extras", {}))},
         )
 
@@ -173,6 +175,16 @@ class Theme:
         normalized_href = _normalize_stylesheet_href(href)
         if normalized_href not in self.stylesheets:
             self.stylesheets.append(normalized_href)
+
+    def set_stylesheet(self, stylesheet: StyleSheet | None) -> None:
+        """Attach a class-based stylesheet to this theme."""
+        if stylesheet is not None and not isinstance(stylesheet, StyleSheet):
+            raise TypeError("Theme stylesheet must be a StyleSheet instance or None")
+        self.stylesheet = stylesheet
+
+    def get_stylesheet(self) -> StyleSheet | None:
+        """Return the class-based stylesheet attached to this theme."""
+        return self.stylesheet
 
     def component_defaults(self, *keys: str) -> Dict[str, str]:
         """Return merged defaults for component keys (left to right)."""
@@ -211,7 +223,9 @@ class Theme:
         return "\n".join(blocks)
 
 
-_ACTIVE_THEME: ContextVar[Theme | None] = ContextVar("astris_active_theme", default=None)
+_ACTIVE_THEME: ContextVar[Theme | None] = ContextVar(
+    "astris_active_theme", default=None
+)
 
 
 def get_active_theme() -> Theme | None:
@@ -235,7 +249,9 @@ def create_default_theme(mode: Literal["light", "dark"] = "light") -> Theme:
     if normalized_mode not in {"light", "dark"}:
         raise ValueError("Theme mode must be 'light' or 'dark'")
 
-    colors = _DEFAULT_DARK_COLORS if normalized_mode == "dark" else _DEFAULT_LIGHT_COLORS
+    colors = (
+        _DEFAULT_DARK_COLORS if normalized_mode == "dark" else _DEFAULT_LIGHT_COLORS
+    )
 
     return Theme(
         mode=normalized_mode,

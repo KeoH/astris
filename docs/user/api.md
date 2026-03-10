@@ -32,9 +32,9 @@ This reference includes Astris public exports and HTML wrapper helpers.
     options:
       show_root_full_path: false
 
-## astris.css_generator
+## astris.stylesheet
 
-::: astris.css_generator
+::: astris.stylesheet
     options:
       show_root_full_path: false
 

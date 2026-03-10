@@ -15,13 +15,15 @@ from .app import Astris
 
 MAIN_TEMPLATE = """import sys
 
-from astris import Astris
+from astris import Astris, Theme, StyleSheet
 from astris.lib import A, Body, Button, Div, H1, Header, Html, Main, P, Span
 
-app = Astris()
-
-# Inject Tailwind CSS via CDN
-app.add_head_script("https://cdn.tailwindcss.com")
+theme = Theme(
+    name="Starter Theme",
+    stylesheets=["https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"],
+)
+theme.set_stylesheet(StyleSheet())
+app = Astris(theme=theme)
 
 
 @app.page("/")

@@ -10,12 +10,14 @@ All notable changes to this project are documented in this file.
 - Added built-in default theme preset factory `create_default_theme("light" | "dark")`.
 - Added official soft preset factory `create_soft_theme("light" | "dark")` built on top of default theme tokens.
 - Added typed style system in `astris.styles` (`Style`, enums, `EdgeInsets`, and variable-based `Theme`).
-- Added reusable CSS orchestration via `astris.css_generator.GlobalStyleSheet`.
+- Added reusable CSS orchestration via `astris.stylesheet.StyleSheet`.
 - Added compatibility modules `astris.components` and `astris.core` (`AstrisApp` alias).
-- Added predefined breakpoint support (`sm`, `md`, `lg`, `xl`, `2xl`) in `GlobalStyleSheet.add_breakpoint(...)`.
+- Added predefined breakpoint support (`sm`, `md`, `lg`, `xl`, `2xl`) in `StyleSheet.add_breakpoint(...)`.
 - Added convenience helpers for faster styling: `sx(...)`, `Style.merge(...)`, and `Theme.quick(...)`.
 - Added typed `TextDecoration` helpers and enums in `astris.styles` to compose full `text-decoration` shorthand values (line/style/color/thickness), including multiple lines.
 - Added external stylesheet registration in `astris.theme.Theme` via `stylesheets` and `add_stylesheet(...)`.
+- Added `responsive` support in `StyleSheet.add_class(...)` to define class-level breakpoint overrides in the same call.
+- Added `Style` support for class-local `states` and `selectors` so pseudo-states (`:hover`, `:focus-visible`) and structural selectors (`:nth-child(...)`, `& > ...`) can be defined without `add_raw(...)`.
 
 ### Changed
 - Updated package version metadata to `0.1.5`.
@@ -28,13 +30,18 @@ All notable changes to this project are documented in this file.
 - Updated public exports and user docs to include theme APIs.
 - Updated public docs navigation with a dedicated `Styles` page (`docs/user/styles.md`) covering `astris.styles` usage examples.
 - Reorganized public docs by moving theme guidance into dedicated page `docs/user/themes.md` and linking it from quickstart/home navigation.
-- Expanded public docs with explicit media query guidance using `GlobalStyleSheet.add_media_query(...)`.
-- Expanded public docs with a class-first guide for `Style` + `GlobalStyleSheet` (variants, breakpoints, raw selectors, and integration patterns).
+- Expanded public docs with explicit media query guidance using `StyleSheet.add_media_query(...)`.
+- Expanded public docs with a class-first guide for `Style` + `StyleSheet` (variants, breakpoints, raw selectors, and integration patterns).
+- Updated `Theme` to own an optional `StyleSheet` (`set_stylesheet(...)`/`get_stylesheet(...)`) and inject class CSS automatically during page rendering.
+- Renamed `GlobalStyleSheet` to `StyleSheet` and exported `StyleSheet` from the root public API.
 - Updated head asset rendering order to inject theme external stylesheets before generated theme CSS and app-level head links.
 - Updated link injection to deduplicate repeated stylesheet hrefs across theme and app-level head links.
 - Updated `Theme` stylesheet validation to accept relative paths (for example `assets/site.css`) in addition to `https://...` and `/...`.
 - Updated `run_dev()` to mount local `./assets` at `/assets` by default when the directory exists.
 - Updated `build()` to copy local `./assets` into output and rewrite relative `assets/...` href values for nested routes.
+- Updated `example.py` with a full theme-first walkthrough that connects app tokens, reusable CSS classes, and route composition.
+- Updated public theme documentation (`docs/user/themes.md`) with a recommended step-by-step workflow aligned to `example.py`.
+- Updated `README.md` theme section to point to the renewed example-driven workflow.
 
 ### Fixed
 - Aligned release metadata across project files for consistent packaging and distribution workflows.

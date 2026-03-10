@@ -82,4 +82,6 @@ def test_run_dev_mounts_assets_directory_when_present(
     app.run_dev(port=9004, reload=False)
 
     assert len(calls) == 1
-    assert any(getattr(route, "path", None) == "/assets" for route in app._fastapi_app.routes)
+    assert any(
+        getattr(route, "path", None) == "/assets" for route in app._fastapi_app.routes
+    )
