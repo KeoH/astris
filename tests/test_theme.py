@@ -1,5 +1,6 @@
 import astris
 import pytest
+from astris.stylesheet import StyleSheet
 from astris.theme import Theme, create_default_theme, create_soft_theme
 
 
@@ -73,11 +74,41 @@ def test_theme_stylesheets_are_normalized_and_deduplicated() -> None:
 def test_theme_add_stylesheet_rejects_invalid_href() -> None:
     theme = Theme()
 
-    with pytest.raises(ValueError):
-        theme.add_stylesheet("assets/site.css")
+    theme.add_stylesheet("assets/site.css")
+    assert theme.stylesheets == ["assets/site.css"]
 
     with pytest.raises(ValueError):
         theme.add_stylesheet("http://cdn.example.com/base.css")
+
+    with pytest.raises(ValueError):
+        theme.add_stylesheet("mailto:test@example.com")
+
+
+def test_theme_can_attach_and_retrieve_stylesheet() -> None:
+    theme = Theme()
+    stylesheet = StyleSheet()
+
+    theme.set_stylesheet(stylesheet)
+
+    assert theme.get_stylesheet() is stylesheet
+
+
+def test_theme_extend_keeps_stylesheet_by_default() -> None:
+    stylesheet = StyleSheet()
+    base = Theme(stylesheet=stylesheet)
+
+    extended = base.extend(colors={"bg": "#000"})
+
+    assert extended.get_stylesheet() is stylesheet
+
+
+def test_theme_extend_allows_overriding_stylesheet() -> None:
+    base = Theme(stylesheet=StyleSheet())
+    custom = StyleSheet()
+
+    extended = base.extend(stylesheet=custom)
+
+    assert extended.get_stylesheet() is custom
 
 
 def test_theme_component_defaults_merge_by_key_order() -> None:

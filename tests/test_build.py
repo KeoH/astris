@@ -165,3 +165,56 @@ def test_build_includes_theme_stylesheets_and_deduplicates_with_app_links(
     assert 'href="https://cdn.example.com/base.css"' in docs_html
     assert 'href="/assets/site.css"' in docs_html
     assert docs_html.count('href="https://cdn.example.com/base.css"') == 1
+
+
+def test_build_rewrites_relative_theme_assets_stylesheets_for_nested_routes(
+    tmp_path: Path,
+) -> None:
+    app = Astris(
+        theme=Theme(
+            stylesheets=[
+                "assets/site.css",
+            ]
+        )
+    )
+
+    @app.page("/")
+    def home():
+        return Div(children=[Text("<html><body>Home</body></html>")])
+
+    @app.page("/docs/intro")
+    def docs_intro():
+        return Div(children=[Text("<html><body>Docs</body></html>")])
+
+    output_dir = tmp_path / "site"
+    app.build(str(output_dir))
+
+    index_html = (output_dir / "index.html").read_text(encoding="utf-8")
+    docs_html = (output_dir / "docs/intro.html").read_text(encoding="utf-8")
+
+    assert 'href="assets/site.css"' in index_html
+    assert 'href="../assets/site.css"' in docs_html
+
+
+def test_build_copies_assets_directory(tmp_path: Path, monkeypatch) -> None:
+    app = Astris()
+
+    @app.page("/")
+    def home():
+        return Div(children=[Text("<html><body>Home</body></html>")])
+
+    project_root = tmp_path / "project"
+    assets_dir = project_root / "assets"
+    assets_dir.mkdir(parents=True)
+    (assets_dir / "site.css").write_text("body { color: #222; }", encoding="utf-8")
+    (assets_dir / "scripts").mkdir()
+    (assets_dir / "scripts" / "app.js").write_text(
+        "console.log('hello');", encoding="utf-8"
+    )
+
+    output_dir = project_root / "dist"
+    monkeypatch.chdir(project_root)
+    app.build(str(output_dir))
+
+    assert (output_dir / "assets" / "site.css").exists()
+    assert (output_dir / "assets" / "scripts" / "app.js").exists()

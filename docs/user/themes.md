@@ -1,256 +1,187 @@
 # Themes
 
-Astris themes define design tokens and per-component default attributes.
-When a theme is configured on `Astris`, it is applied during rendering in both `run_dev()` and `build()`.
+Astris themes are the base layer of your UI system. In practice, the recommended flow is:
 
-Astris also supports typed CSS composition in Python through `astris.styles` and reusable class generation via `astris.css_generator.GlobalStyleSheet`.
+1. Configure app-level tokens with `astris.theme.Theme`.
+2. Create reusable classes with `StyleSheet`.
+3. Compose routes using those classes and only use inline style for one-off adjustments.
 
-## Typed styles with enums
+The full working reference for this flow is `example.py`.
 
-```python
-from astris.styles import Align, Colors, Display, EdgeInsets, FlexDirection, Position, Style
-from astris.components import Div, Text
+## Recommended workflow
 
-card = Div(
-    style=Style(
-        display=Display.FLEX,
-        flex_direction=FlexDirection.COLUMN,
-        justify_content=Align.SPACE_BETWEEN,
-        align_items=Align.CENTER,
-        position=Position.RELATIVE,
-        background_color=Colors.WHITE,
-        padding=EdgeInsets.all(24),
-        margin=EdgeInsets.symmetric(vertical=16, horizontal="auto"),
-        box_shadow="0px 10px 15px -3px rgba(0,0,0,0.1)",
-        border_radius="12px",
-    ),
-    children=[Text("Typed style card")],
-)
-```
-
-- Enum values provide safer style authoring and IDE completion.
-- Unknown CSS properties are accepted as keyword arguments and converted from `snake_case` to `kebab-case`.
-
-For quick style creation, use `style(...)` as a shorthand:
-
-```python
-from astris.styles import Display, style
-
-inline = style(display=Display.FLEX, gap="12px", align_items="center")
-```
-
-## EdgeInsets
-
-```python
-from astris.styles import EdgeInsets
-
-padding_all = EdgeInsets.all(10)                       # 10px
-margin_symmetric = EdgeInsets.symmetric(vertical=20, horizontal=15)  # 20px 15px
-padding_only = EdgeInsets.only(top=10, bottom=5, left=20)            # 10px 0px 5px 20px
-```
-
-## Built-in presets
-
-Astris includes two built-in preset factories:
-
-- `create_default_theme(mode="light" | "dark")`
-- `create_soft_theme(mode="light" | "dark")`
-
-If you instantiate `Astris()` without passing `theme`, Astris automatically applies `create_default_theme("light")`.
+### 1. Choose a preset and extend it
 
 ```python
 from astris import Astris, create_default_theme, create_soft_theme
 
-app_auto = Astris()
-app_default = Astris(theme=create_default_theme("light"))
-app_soft = Astris(theme=create_soft_theme("dark"))
+THEME_PRESET = "soft"
+
+base_theme = (
+    create_soft_theme("dark") if THEME_PRESET == "soft" else create_default_theme("dark")
+)
+
+theme = base_theme.extend(
+    components={
+        "body": {
+            "style": "margin: 0; background: var(--color-bg); color: var(--color-fg);"
+        },
+        "Section": {
+            "style": "margin-bottom: var(--space-lg);"
+        },
+    },
+    extras={
+        "global_css": [
+            "* { box-sizing: border-box; }",
+            "a { color: inherit; }",
+        ]
+    },
+)
+
+app = Astris(theme=theme)
 ```
 
-## Create a custom theme
-
-You can define your own tokens and component defaults with `Theme(...)`.
+### 2. Create reusable UI classes
 
 ```python
-from astris import Astris, Theme
+from astris.stylesheet import StyleSheet
+from astris.styles import Display, EdgeInsets, FlexDirection, Style
 
-app = Astris(
-    theme=Theme(
-        mode="dark",
-        colors={
-            "bg": "#0f172a",
-            "fg": "#e2e8f0",
-            "primary": "#38bdf8",
-        },
-        spacing={
-            "sm": "0.5rem",
-            "md": "1rem",
-            "lg": "1.5rem",
-        },
-        scales={
-            "radius": {"sm": "0.25rem", "md": "0.5rem"},
-            "font": {"md": "1rem", "lg": "1.125rem"},
-        },
-        components={
-            "body": {"style": "background: var(--color-bg); color: var(--color-fg);"},
-            "div": {"class_name": "surface"},
-        },
-        extras={
-            "name": "brand-dark",
-        },
+stylesheet = StyleSheet()
+
+cls_hero = stylesheet.add_class(
+    "hero",
+    Style(
+        display=Display.FLEX,
+        flex_direction=FlexDirection.COLUMN,
+        gap="14px",
+        padding=EdgeInsets.symmetric(vertical=28, horizontal=24),
+        border_radius="16px",
+        background_color="var(--color-surface)",
+        border="1px solid var(--color-surface-contrast)",
+    ),
+)
+
+cls_btn = stylesheet.add_class(
+    "btn",
+    Style(
+        border="none",
+        border_radius="10px",
+        padding=EdgeInsets.symmetric(vertical=10, horizontal=16),
+        background_color="var(--color-primary)",
+        color="var(--color-primary-contrast)",
+    ),
+)
+
+# Keep responsive overrides with the same class definition.
+stylesheet.add_class(
+    "page-shell",
+    Style(padding="32px 20px"),
+    responsive={"md": Style(padding="24px 14px")},
+)
+```
+
+### 3. Attach stylesheet to the theme
+
+```python
+theme.set_stylesheet(stylesheet)
+```
+
+Astris auto-injects the generated class CSS in `<head>` when the stylesheet is attached to the active theme.
+
+### 4. Use your normal layout
+
+```python
+from astris.components import Body, Head, Html, Title
+
+def main_layout(page_title: str, children: list | None = None) -> Html:
+    return Html(
+        children=[
+            Head(children=[Title(children=[page_title])]),
+            Body(children=children or []),
+        ]
     )
-)
 ```
 
-For a faster setup, use `Theme.quick(...)`:
+### 5. Use class names in routes
 
 ```python
-from astris.styles import Theme
+from astris.components import A, Button, H1, P, Section
 
-theme = Theme.quick(
-    name="demo",
-    brand_primary="#7c3aed",
-    text_primary="#f9fafb",
-)
+@app.page("/")
+def home() -> Html:
+    return main_layout(
+        page_title="Astris Theme Guide",
+        children=[
+            Section(
+                class_name=cls_hero,
+                children=[
+                    H1(children=["Astris themes in one file"]),
+                    P(children=["Theme tokens + reusable classes + components."]),
+                    A(href="/posts", class_name=cls_btn, children=["Browse posts"]),
+                ],
+            )
+        ],
+    )
 ```
 
-## Token groups
+## Theme token groups
 
 - `colors`: exported as CSS variables `--color-*`
 - `spacing`: exported as CSS variables `--space-*`
 - `scales`: exported as CSS variables `--<scale>-<token>`
 - `components`: default HTML attributes by component key
-- `extras`: arbitrary metadata (not exported as CSS variables)
+- `stylesheets`: external stylesheets to include in `<head>`
+- `extras`: additional metadata and optional global CSS blocks
 
 ## Component defaults and precedence
 
-Theme component defaults are merged in this order:
+Theme defaults are merged in this order:
 
 1. Tag-level key (example: `"div"`)
 2. Class-level key (example: `"Div"`)
-3. Explicit attributes passed to the component
+3. Explicit attributes in component call
 
 Explicit attributes always win.
 
-```python
-from astris import Theme
-from astris.component import Element
-from astris.theme import activate_theme, deactivate_theme
-
-
-class Div(Element):
-    tag = "div"
-
-
-theme = Theme(
-    components={
-        "div": {"class_name": "surface", "id": "tag-id", "data_variant": "base"},
-        "Div": {"id": "class-id", "data_density": "comfortable"},
-    }
-)
-
-token = activate_theme(theme)
-try:
-    html = Div(
-        children=["Hello"],
-        class_name="hero",
-        id="explicit-id",
-    ).render()
-finally:
-    deactivate_theme(token)
-
-print(html)
-# <div class="hero" id="explicit-id" data-variant="base" data-density="comfortable">Hello</div>
-```
-
-Normalization rules also apply to theme defaults:
+Normalization rules:
 
 - `class_name` becomes `class`
 - `_` in attribute names becomes `-` (for example `data_variant` -> `data-variant`)
 
-## Runtime switching
+## Runtime behavior
 
-Theme resolution happens at render time, so you can update `app.theme` before later renders/builds.
-
-```python
-from astris import Astris, Theme
-from astris.lib import Div
-
-app = Astris(theme=Theme(mode="light", components={"div": {"class_name": "light"}}))
-
-
-@app.page("/")
-def home():
-    return Div(children=["Home"])
-
-
-app.theme = Theme(mode="dark", components={"div": {"class_name": "dark"}})
-app.build("dist")
-```
-
-## CSS variables and mode behavior
-
-When `app.theme` is set, Astris injects a `<style>` block in `<head>` with:
+When a theme is active, Astris injects in `<head>`:
 
 - CSS variables generated from `colors`, `spacing`, and `scales`
 - `color-scheme: <mode>`
+- optional blocks from `extras["global_css"]`
 
-Astris also injects `data-theme="<mode>"` into `<html>` if that attribute is missing.
+Astris also injects `data-theme="<mode>"` into `<html>` if missing.
 
-## External CSS in Theme
+Theme resolution happens at render time, so you can switch themes before `run_dev()` responses or before `build()`.
 
-You can register external stylesheets directly in `Theme` and use them as a base layer for your design system.
+## External stylesheets in Theme
 
-This works in both `run_dev()` and `build()` output.
-
-### API surface
+You can register stylesheets directly in `Theme`:
 
 - `Theme(stylesheets=[...])`
 - `theme.add_stylesheet(href)`
 
-```python
-from astris import Theme
+Accepted formats:
 
-theme = Theme(
-    mode="light",
-    stylesheets=[
-        "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css",
-        "/assets/base.css",
-    ],
-)
+- `https://...`
+- `/...` (site-root path)
+- relative paths such as `assets/base.css`
 
-theme.add_stylesheet("https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap")
-```
+Non-HTTPS schemes are rejected.
 
-### Accepted href formats
+## Tips for maintainable theming
 
-Astris accepts only:
-
-- Absolute HTTPS URLs (for example `https://cdn.example.com/theme.css`)
-- Site-root paths (for example `/assets/base.css`)
-
-Astris rejects relative paths like `assets/base.css`.
-
-### Injection order and cascade
-
-When Astris renders `<head>`, the order is:
-
-1. Theme external stylesheets (`theme.stylesheets`)
-2. Theme generated CSS block (`<style data-astris-theme="...">`)
-3. App-level links (`app.add_head_link(...)`)
-
-This means:
-
-- Theme generated variables/rules can override base external CSS.
-- App-level links can override both if selectors have equal specificity.
-
-### Deduplication by href
-
-Astris deduplicates `<link>` tags by exact `href` string across:
-
-- Theme stylesheets
-- Links added with `app.add_head_link(...)`
-
-The first occurrence wins (stable order).
+- Keep reusable visual patterns in classes (`StyleSheet`).
+- Use `Theme.components` for default attributes and low-level app defaults.
+- Use inline `Style(...)` only for local one-off adjustments.
+- Keep class names semantic (`hero`, `card`, `btn`) instead of route-specific names.
 
 ### Build behavior
 
@@ -362,17 +293,14 @@ theme = Theme(stylesheets=["https://cdn.example.com/theme.css?v=2026-03-08#core"
 
 The full `href` string is used for deduplication.
 
-### Example 8: Invalid relative path and fix
+### Example 8: Accepted stylesheet path formats
 
 ```python
 from astris import Theme
 
-# ❌ Invalid: raises ValueError
-# theme = Theme(stylesheets=["assets/base.css"])
-
-# ✅ Valid alternatives
-theme = Theme(stylesheets=["/assets/base.css"])
-# or
+# All of these are valid
+theme = Theme(stylesheets=["assets/base.css"])
+theme.add_stylesheet("/assets/layout.css")
 theme.add_stylesheet("https://cdn.example.com/base.css")
 ```
 
@@ -385,21 +313,21 @@ theme.add_stylesheet("https://cdn.example.com/base.css")
 - Duplicate links in source config:
   - Verify exact `href` strings (including query/hash) because dedupe is string-based.
 - Validation error for stylesheet path:
-  - Use only `https://...` or `/...`.
+    - Use only `https://...`, `/...`, or relative paths.
 
-## GlobalStyleSheet for reusable classes
+## StyleSheet for reusable classes
 
-`GlobalStyleSheet` lets you avoid repeating inline style payload across many components.
+`StyleSheet` lets you avoid repeating inline style payload across many components.
 
 For an extensive class-first guide (variants, responsive classes, tokenized classes, pitfalls), see [Styles](styles.md).
 
 ```python
-from astris.css_generator import GlobalStyleSheet
+from astris.stylesheet import StyleSheet
 from astris.components import Body, Div, Head, Html, Text
 from astris.styles import Display, EdgeInsets, Style, Theme
 
 theme = Theme(name="default", brand_color="#ff5722", surface="#ffffff")
-stylesheet = GlobalStyleSheet(theme=theme)
+stylesheet = StyleSheet(theme=theme)
 
 btn = stylesheet.add_class(
     "btn-action",
@@ -436,9 +364,12 @@ stylesheet.add_media_query(
     },
 )
 
+theme = Theme(name="Catalog")
+theme.set_stylesheet(stylesheet)
+app = Astris(theme=theme)
+
 page = Html(
     children=[
-        Head(children=[Text(stylesheet.render())]),
         Body(
             children=[
                 Div(class_name=grid, children=[
@@ -455,13 +386,13 @@ For advanced selectors and keyframes, keep using `add_raw(...)`.
 
 ## Media queries (responsive design)
 
-Use `GlobalStyleSheet.add_media_query(...)` to register responsive rules in Python.
+Use `StyleSheet.add_media_query(...)` to register responsive rules in Python.
 
 ```python
-from astris.css_generator import GlobalStyleSheet
+from astris.stylesheet import StyleSheet
 from astris.styles import EdgeInsets, Style
 
-stylesheet = GlobalStyleSheet()
+stylesheet = StyleSheet()
 
 stylesheet.add_media_query(
     "(max-width: 768px)",

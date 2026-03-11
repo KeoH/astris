@@ -223,7 +223,6 @@ class TextDecorationThickness(str, Enum):
     FROM_FONT = "from-font"
 
 
-
 def _to_css_size(value: str | int | float) -> str:
     if isinstance(value, (int, float)):
         return f"{value}px"
@@ -435,9 +434,13 @@ class Style:
         padding: EdgeInsets | str | int | float | None = None,
         margin: EdgeInsets | str | int | float | None = None,
         text_decoration: TextDecoration | str | None = None,
+        states: Mapping[str, "Style | str"] | None = None,
+        selectors: Mapping[str, "Style | str"] | None = None,
         **properties: Any,
     ) -> None:
         self._properties: Dict[str, str] = {}
+        self._states: Dict[str, Style | str] = {}
+        self._selectors: Dict[str, Style | str] = {}
 
         typed_props = {
             "display": display,
@@ -462,6 +465,42 @@ class Style:
             css_key = key.replace("_", "-")
             self._properties[css_key] = self._serialize_value(value)
 
+        self._states = self._normalize_states(states)
+        self._selectors = self._normalize_selectors(selectors)
+
+    def _normalize_states(
+        self, value: Mapping[str, "Style | str"] | None
+    ) -> Dict[str, Style | str]:
+        if not value:
+            return {}
+
+        normalized: Dict[str, Style | str] = {}
+        for state_name, state_style in value.items():
+            state_key = str(state_name).strip()
+            if not state_key:
+                continue
+
+            if not state_key.startswith(":"):
+                state_key = f":{state_key}"
+
+            normalized[state_key] = state_style
+
+        return normalized
+
+    def _normalize_selectors(
+        self, value: Mapping[str, "Style | str"] | None
+    ) -> Dict[str, Style | str]:
+        if not value:
+            return {}
+
+        normalized: Dict[str, Style | str] = {}
+        for selector, selector_style in value.items():
+            selector_key = str(selector).strip()
+            if selector_key:
+                normalized[selector_key] = selector_style
+
+        return normalized
+
     def _serialize_value(self, value: Any) -> str:
         if isinstance(value, Enum):
             return str(value.value)
@@ -477,17 +516,58 @@ class Style:
         declarations = [f"{key}: {value};" for key, value in self._properties.items()]
         return " ".join(declarations)
 
+    def nested_rules_for(self, base_selector: str) -> list[tuple[str, str]]:
+        """Return selector/declarations pairs for states and nested selectors."""
+        rules: list[tuple[str, str]] = []
+
+        for state_key, state_style in self._states.items():
+            declarations = (
+                state_style.to_css()
+                if isinstance(state_style, Style)
+                else str(state_style)
+            ).strip()
+            if declarations:
+                rules.append((f"{base_selector}{state_key}", declarations))
+
+        for selector_key, selector_style in self._selectors.items():
+            declarations = (
+                selector_style.to_css()
+                if isinstance(selector_style, Style)
+                else str(selector_style)
+            ).strip()
+            if not declarations:
+                continue
+
+            if "&" in selector_key:
+                resolved_selector = selector_key.replace("&", base_selector)
+            elif selector_key.startswith(":"):
+                resolved_selector = f"{base_selector}{selector_key}"
+            else:
+                resolved_selector = f"{base_selector} {selector_key}"
+
+            rules.append((resolved_selector, declarations))
+
+        return rules
+
     @classmethod
     def merge(cls, *styles: "Style", **properties: Any) -> "Style":
         """Compose many Style objects and optional extra properties."""
         merged = cls(**properties)
         collected: Dict[str, str] = {}
+        collected_states: Dict[str, Style | str] = {}
+        collected_selectors: Dict[str, Style | str] = {}
 
         for style in styles:
             collected.update(style._properties)
+            collected_states.update(style._states)
+            collected_selectors.update(style._selectors)
 
         collected.update(merged._properties)
+        collected_states.update(merged._states)
+        collected_selectors.update(merged._selectors)
         merged._properties = collected
+        merged._states = collected_states
+        merged._selectors = collected_selectors
         return merged
 
     def __str__(self) -> str:

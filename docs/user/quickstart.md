@@ -80,13 +80,18 @@ app = Astris(
         mode="light",
         stylesheets=[
             "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css",
-            "/assets/base.css",
+            "assets/base.css",
         ],
     )
 )
 ```
 
-Use `https://...` or `/...` href formats.
+Use `https://...`, `/...`, or relative `assets/...` href formats.
+
+When local `./assets` exists:
+
+- `run_dev()` serves it automatically at `/assets`.
+- `build()` copies it automatically to `<output_dir>/assets`.
 
 For ordering, deduplication, and build behavior details, see [Themes](themes.md#external-css-in-theme).
 

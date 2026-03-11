@@ -50,21 +50,27 @@ def test_edge_insets_factories_render_expected_values() -> None:
 
 def test_text_decoration_factories_render_expected_values() -> None:
     assert str(TextDecoration.none()) == "none"
-    assert str(
-        TextDecoration.underline(
-            style=TextDecorationStyle.WAVY,
-            color=Colors.BLACK,
-            thickness=2,
+    assert (
+        str(
+            TextDecoration.underline(
+                style=TextDecorationStyle.WAVY,
+                color=Colors.BLACK,
+                thickness=2,
+            )
         )
-    ) == "underline wavy #000000 2px"
-    assert str(
-        TextDecoration.custom(
-            line=[TextDecorationLine.UNDERLINE, TextDecorationLine.OVERLINE],
-            style="dashed",
-            color="rebeccapurple",
-            thickness=TextDecorationThickness.FROM_FONT,
+        == "underline wavy #000000 2px"
+    )
+    assert (
+        str(
+            TextDecoration.custom(
+                line=[TextDecorationLine.UNDERLINE, TextDecorationLine.OVERLINE],
+                style="dashed",
+                color="rebeccapurple",
+                thickness=TextDecorationThickness.FROM_FONT,
+            )
         )
-    ) == "underline overline dashed rebeccapurple from-font"
+        == "underline overline dashed rebeccapurple from-font"
+    )
 
 
 def test_style_accepts_text_decoration_typed_value() -> None:
@@ -118,3 +124,40 @@ def test_theme_serializes_enum_tokens_to_css_values() -> None:
     css = theme.to_style_block()
     assert "--surface: #000000;" in css
     assert "--text-primary: pink;" in css
+
+
+def test_style_supports_states_and_selectors() -> None:
+    style_obj = Style(
+        background_color=Colors.WHITE,
+        states={
+            "hover": Style(color=Colors.BLACK),
+            ":focus-visible": "outline: 2px solid var(--color-primary);",
+        },
+        selectors={
+            ":nth-child(odd)": Style(background_color=Colors.GHOST_WHITE),
+            "& > h2": Style(margin_bottom="8px"),
+        },
+    )
+
+    rules = style_obj.nested_rules_for(".card")
+    rules_map = {selector: declarations for selector, declarations in rules}
+
+    assert rules_map[".card:hover"] == "color: #000000;"
+    assert (
+        rules_map[".card:focus-visible"] == "outline: 2px solid var(--color-primary);"
+    )
+    assert rules_map[".card:nth-child(odd)"] == "background-color: ghostwhite;"
+    assert rules_map[".card > h2"] == "margin-bottom: 8px;"
+
+
+def test_style_merge_preserves_nested_rules() -> None:
+    base = Style(states={"hover": Style(color=Colors.BLACK)})
+    override = Style(selectors={"& > .icon": Style(margin_left="6px")})
+
+    merged = Style.merge(base, override, display=Display.INLINE_BLOCK)
+    merged_css = merged.to_css()
+    merged_rules = {s: d for s, d in merged.nested_rules_for(".btn")}
+
+    assert "display: inline-block;" in merged_css
+    assert merged_rules[".btn:hover"] == "color: #000000;"
+    assert merged_rules[".btn > .icon"] == "margin-left: 6px;"

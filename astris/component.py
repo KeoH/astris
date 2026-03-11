@@ -63,7 +63,7 @@ class Element(Component):
                 normalized_styles = [styles]
             else:
                 normalized_styles = list(styles)
-            
+
         self.children: List[Union[Component, str]] = list(children) if children else []
         self.attributes = self._process_attributes(attributes)
         if style is not None:
@@ -105,7 +105,9 @@ class Element(Component):
         if theme is None:
             return dict(self.attributes)
 
-        theme_defaults = theme.component_defaults(self.tag.lower(), self.__class__.__name__)
+        theme_defaults = theme.component_defaults(
+            self.tag.lower(), self.__class__.__name__
+        )
         if not theme_defaults:
             return dict(self.attributes)
 

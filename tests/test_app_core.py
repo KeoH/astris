@@ -2,7 +2,9 @@ import types
 
 import astris
 from astris import Astris, Text
+from astris.stylesheet import StyleSheet
 from astris.lib import Body, Div, Html
+from astris.styles import Style
 from astris.theme import Theme
 
 
@@ -89,6 +91,7 @@ def test_runtime_version_is_exported() -> None:
     assert astris.__version__.count(".") == 2
     assert "__version__" in astris.__all__
     assert "Theme" in astris.__all__
+    assert "StyleSheet" in astris.__all__
 
 
 def test_render_page_html_injects_theme_style_and_mode_attribute() -> None:
@@ -126,7 +129,9 @@ def test_theme_changes_are_reflected_after_page_registration() -> None:
     assert 'class="dark"' in second_render
 
 
-def test_render_page_html_injects_theme_stylesheets_before_theme_style_and_app_links() -> None:
+def test_render_page_html_injects_theme_stylesheets_before_theme_style_and_app_links() -> (
+    None
+):
     app = Astris(
         theme=Theme(
             mode="light",
@@ -174,3 +179,30 @@ def test_render_page_html_deduplicates_theme_and_app_links_by_href() -> None:
     )
 
     assert html.count('href="https://cdn.example.com/base.css"') == 1
+
+
+def test_render_page_html_injects_attached_theme_stylesheet() -> None:
+    stylesheet = StyleSheet()
+    stylesheet.add_class("button", style=Style(background_color="#111111"))
+    theme = Theme(mode="light")
+    theme.set_stylesheet(stylesheet)
+    app = Astris(theme=theme)
+    app.add_head_link("https://cdn.example.com/app.css")
+
+    html = app._render_page_html(
+        Div(
+            children=[
+                Text("<html><head><title>Home</title></head><body>Hello</body></html>")
+            ]
+        )
+    )
+
+    assert 'data-astris-theme-classes="light"' in html
+    assert ".button" in html
+    assert "#111111" in html
+    assert html.index('data-astris-theme="light"') < html.index(
+        'data-astris-theme-classes="light"'
+    )
+    assert html.index('data-astris-theme-classes="light"') < html.index(
+        'href="https://cdn.example.com/app.css"'
+    )
