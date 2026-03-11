@@ -9,6 +9,7 @@ This reference includes Astris public exports and HTML wrapper helpers.
       show_root_full_path: false
       members:
         - Astris
+        - Router
         - Theme
         - create_default_theme
         - create_soft_theme

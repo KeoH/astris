@@ -455,4 +455,5 @@ stylesheet.add_media_query(
 
 - Keep theme tokens and global stylesheet setup in a dedicated module (for example `theme.py`).
 - Register reusable classes close to domain components, not inside route handlers.
+- Group related routes in dedicated router modules (for example `routes/pages.py`, `routes/posts.py`) and include them in the app entrypoint.
 - Keep page files focused on structure and data flow.

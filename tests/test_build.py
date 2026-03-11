@@ -218,3 +218,56 @@ def test_build_copies_assets_directory(tmp_path: Path, monkeypatch) -> None:
 
     assert (output_dir / "assets" / "site.css").exists()
     assert (output_dir / "assets" / "scripts" / "app.js").exists()
+
+
+def test_build_generates_dynamic_routes_from_static_params(tmp_path: Path) -> None:
+    app = Astris()
+
+    @app.page("/")
+    def home():
+        return Div(children=[A(href="/posts/hello-astris", children=["Post"])])
+
+    @app.page(
+        "/posts/{slug}",
+        static_params=[
+            {"slug": "hello-astris"},
+            {"slug": "static-sites"},
+        ],
+    )
+    def post(slug: str):
+        return Div(children=[A(href="/", children=["Home"]), Text(slug)])
+
+    output_dir = tmp_path / "site"
+    app.build(str(output_dir))
+
+    post_one = output_dir / "posts" / "hello-astris.html"
+    post_two = output_dir / "posts" / "static-sites.html"
+    index_file = output_dir / "index.html"
+
+    assert post_one.exists()
+    assert post_two.exists()
+    assert index_file.exists()
+
+    index_html = index_file.read_text(encoding="utf-8")
+    post_html = post_one.read_text(encoding="utf-8")
+
+    assert 'href="posts/hello-astris.html"' in index_html
+    assert 'href="../index.html"' in post_html
+    assert "hello-astris" in post_html
+
+
+def test_build_raises_for_dynamic_route_without_static_params(tmp_path: Path) -> None:
+    app = Astris()
+
+    @app.page("/posts/{slug}")
+    def post(slug: str):
+        return Div(children=[Text(slug)])
+
+    output_dir = tmp_path / "site"
+
+    try:
+        app.build(str(output_dir))
+    except ValueError as exc:
+        assert "static_params" in str(exc)
+    else:
+        raise AssertionError("Expected ValueError for dynamic route without static_params")
