@@ -1,7 +1,8 @@
 import types
+from typing import Any
 
 import astris
-from astris import Astris, Text
+from astris import Astris, Router, Text
 from astris.stylesheet import StyleSheet
 from astris.lib import Body, Div, Html
 from astris.styles import Style
@@ -92,6 +93,7 @@ def test_runtime_version_is_exported() -> None:
     assert "__version__" in astris.__all__
     assert "Theme" in astris.__all__
     assert "StyleSheet" in astris.__all__
+    assert "Router" in astris.__all__
 
 
 def test_render_page_html_injects_theme_style_and_mode_attribute() -> None:
@@ -127,6 +129,63 @@ def test_theme_changes_are_reflected_after_page_registration() -> None:
 
     assert 'class="light"' in first_render
     assert 'class="dark"' in second_render
+
+
+def test_include_router_registers_prefixed_routes() -> None:
+    app = Astris()
+    router = Router(prefix="/blog")
+
+    @router.page("/")
+    def blog_home():
+        return Div(children=[Text("blog")])
+
+    @router.page("/about")
+    def blog_about():
+        return Div(children=[Text("about")])
+
+    app.include_router(router)
+
+    assert "/blog" in app.routes
+    assert "/blog/about" in app.routes
+
+
+def test_include_router_rejects_non_router_like_objects() -> None:
+    app = Astris()
+
+    try:
+        app.include_router(object())
+    except TypeError as exc:
+        assert "iter_pages" in str(exc)
+    else:
+        raise AssertionError("Expected TypeError for non-router object")
+
+
+def test_dynamic_route_handles_runtime_params() -> None:
+    app = Astris()
+
+    @app.page("/posts/{slug}", static_params=[{"slug": "hello-astris"}])
+    def post(slug: str):
+        return Div(children=[Text(f"post:{slug}")])
+
+    matching_route: Any = next(
+        route for route in app._fastapi_app.routes if getattr(route, "path", None) == "/posts/{slug}"
+    )
+    response = matching_route.endpoint(slug="hello-astris")
+
+    assert "post:hello-astris" in response
+
+
+def test_dynamic_route_validates_static_params_keys() -> None:
+    app = Astris()
+
+    try:
+        @app.page("/posts/{slug}", static_params=[{"bad": "value"}])
+        def post(slug: str):
+            return Div(children=[Text(slug)])
+    except ValueError as exc:
+        assert "static_params" in str(exc)
+    else:
+        raise AssertionError("Expected ValueError for invalid static_params keys")
 
 
 def test_render_page_html_injects_theme_stylesheets_before_theme_style_and_app_links() -> (

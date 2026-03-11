@@ -134,6 +134,49 @@ Layout helpers (`Container`, `Column`, `Row`) live in `astris.layout`.
 from astris.layout import Container, Column, Row
 ```
 
+## Organizing routes with Router
+
+You can keep `main.py` small by moving page declarations into router modules.
+
+```python
+# routes/pages.py
+from astris import Router
+from astris.lib import Body, H1, Html
+
+pages_router = Router(prefix="/pages")
+
+
+@pages_router.page("/")
+def pages_home():
+	return Html(children=[
+		Body(children=[
+			H1(children=["Pages home"]),
+		])
+	])
+```
+
+```python
+# main.py
+from astris import Astris
+from routes.pages import pages_router
+
+app = Astris()
+app.include_router(pages_router)
+```
+
+Dynamic routes are supported:
+
+```python
+@pages_router.page(
+	"/posts/{slug}",
+	static_params=[{"slug": "hello-astris"}, {"slug": "static-sites"}],
+)
+def post(slug: str):
+	...
+```
+
+`static_params` is required for dynamic routes when running `build()` so Astris can pre-generate concrete HTML files.
+
 ## JSON content collections (read-only)
 
 You can register a folder of `.json` files as a read-only collection and generate detail pages from a Python template.

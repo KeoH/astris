@@ -2,8 +2,9 @@ import os
 import re
 import shutil
 import sys
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Callable, Dict, List, Mapping, Sequence
 from urllib.parse import urlsplit, urlunsplit
 
 import uvicorn
@@ -17,9 +18,22 @@ from .component import Component
 from .theme import Theme, activate_theme, create_default_theme, deactivate_theme
 
 
+PathParams = Dict[str, str]
+PageFactory = Callable[[PathParams], Component]
+
+
+@dataclass(frozen=True)
+class DynamicRoute:
+    path_pattern: str
+    parameter_names: tuple[str, ...]
+    render: PageFactory
+    static_params: List[PathParams]
+
+
 class Astris:
     def __init__(self, theme: Theme | None = None):
         self.routes: Dict[str, Component] = {}
+        self._dynamic_routes: Dict[str, DynamicRoute] = {}
         self._collection_entries: Dict[str, List[Dict[str, Any]]] = {}
         self._collection_api_prefixes: Dict[str, str] = {}
         self._head_links: List[Dict[str, str]] = []
@@ -56,6 +70,8 @@ class Astris:
         normalized_path = self._normalize_route_path(path)
         if normalized_path in self.routes:
             raise ValueError(f"Route already registered: {normalized_path}")
+        if normalized_path in self._dynamic_routes:
+            raise ValueError(f"Route already registered: {normalized_path}")
 
         self.routes[normalized_path] = component
         component_tree = component
@@ -71,6 +87,113 @@ class Astris:
         )
 
         return normalized_path
+
+    def _extract_path_parameter_names(self, path: str) -> tuple[str, ...]:
+        matches = re.findall(r"\{([a-zA-Z_][a-zA-Z0-9_]*)\}", path)
+        if len(matches) != len(set(matches)):
+            raise ValueError(f"Duplicate path parameter names are not allowed: {path}")
+        return tuple(matches)
+
+    def _validate_static_params(
+        self,
+        path: str,
+        parameter_names: tuple[str, ...],
+        static_params: Sequence[Mapping[str, Any]] | None,
+    ) -> List[PathParams]:
+        if not static_params:
+            return []
+
+        validated: List[PathParams] = []
+        expected = set(parameter_names)
+
+        for index, param_set in enumerate(static_params):
+            provided = set(param_set.keys())
+            if provided != expected:
+                raise ValueError(
+                    "static_params entry keys must exactly match route parameters "
+                    f"for {path}; expected {sorted(expected)} got {sorted(provided)} "
+                    f"at index {index}"
+                )
+
+            normalized_params: PathParams = {}
+            for name in parameter_names:
+                value = str(param_set[name])
+                if "/" in value:
+                    raise ValueError(
+                        f"Path parameter '{name}' cannot contain '/': {value}"
+                    )
+                normalized_params[name] = value
+
+            validated.append(normalized_params)
+
+        return validated
+
+    def _materialize_dynamic_path(self, path_pattern: str, params: Mapping[str, str]) -> str:
+        materialized = path_pattern
+        for name, value in params.items():
+            materialized = materialized.replace(f"{{{name}}}", value)
+        return self._normalize_route_path(materialized)
+
+    def _register_dynamic_route(
+        self,
+        path: str,
+        parameter_names: tuple[str, ...],
+        factory: Callable[..., Component],
+        static_params: Sequence[Mapping[str, Any]] | None,
+    ) -> str:
+        normalized_path = self._normalize_route_path(path)
+        if normalized_path in self.routes or normalized_path in self._dynamic_routes:
+            raise ValueError(f"Route already registered: {normalized_path}")
+
+        validated_static_params = self._validate_static_params(
+            normalized_path,
+            parameter_names,
+            static_params,
+        )
+
+        def render(path_params: PathParams) -> Component:
+            return factory(**path_params)
+
+        dynamic_route = DynamicRoute(
+            path_pattern=normalized_path,
+            parameter_names=parameter_names,
+            render=render,
+            static_params=validated_static_params,
+        )
+        self._dynamic_routes[normalized_path] = dynamic_route
+
+        def serve_page(**path_params: str):
+            component_tree = dynamic_route.render(path_params)
+            return f"<!DOCTYPE html>{self._render_page_html(component_tree)}"
+
+        self._fastapi_app.add_api_route(
+            normalized_path,
+            serve_page,
+            methods=["GET"],
+            response_class=HTMLResponse,
+        )
+
+        return normalized_path
+
+    def _register_page_callable(
+        self,
+        path: str,
+        factory: Callable[..., Component],
+        static_params: Sequence[Mapping[str, Any]] | None = None,
+    ) -> str:
+        parameter_names = self._extract_path_parameter_names(path)
+        if parameter_names:
+            return self._register_dynamic_route(
+                path,
+                parameter_names,
+                factory,
+                static_params,
+            )
+
+        component_tree = factory()
+        if not isinstance(component_tree, Component):
+            raise TypeError("Page function must return an Astris Component")
+        return self._register_component_route(path, component_tree)
 
     def _register_collection_api(
         self,
@@ -224,16 +347,31 @@ class Astris:
         html = self._inject_theme_mode(html)
         return self._inject_head_assets(html)
 
-    def page(self, path: str):
+    def page(
+        self,
+        path: str,
+        static_params: Sequence[Mapping[str, Any]] | None = None,
+    ):
         """Decorator to register a page (route)."""
 
         def decorator(func):
-            component_tree = func()
-            self._register_component_route(path, component_tree)
+            self._register_page_callable(path, func, static_params=static_params)
 
             return func
 
         return decorator
+
+    def include_router(self, router: Any) -> None:
+        """Register all routes from a Router-like object."""
+        if not hasattr(router, "iter_pages"):
+            raise TypeError("Router must expose an iter_pages() method")
+
+        for route in router.iter_pages():
+            self._register_page_callable(
+                route.path,
+                route.factory,
+                static_params=route.static_params,
+            )
 
     def _infer_import_string(self) -> str | None:
         main_module = sys.modules.get("__main__")
@@ -273,21 +411,26 @@ class Astris:
             return f"{normalized.strip('/')}/index.html"
         return f"{normalized.strip('/')}.html"
 
-    def _resolve_route(self, path: str) -> str | None:
+    def _resolve_route(
+        self,
+        path: str,
+        available_routes: set[str] | None = None,
+    ) -> str | None:
         if not path:
             return None
 
         normalized_path = self._normalize_route_path(path)
+        route_keys = available_routes if available_routes is not None else set(self.routes)
 
-        if normalized_path in self.routes:
+        if normalized_path in route_keys:
             return normalized_path
 
         without_slash = normalized_path.rstrip("/")
-        if without_slash and without_slash in self.routes:
+        if without_slash and without_slash in route_keys:
             return without_slash
 
         with_slash = f"{without_slash}/"
-        if with_slash in self.routes:
+        if with_slash in route_keys:
             return with_slash
 
         return None
@@ -319,10 +462,15 @@ class Astris:
         return f"href={quote}{rebuilt_href}{quote}"
 
     def _rewrite_route_href(
-        self, split, current_dir: str, clean_urls: bool, quote: str
+        self,
+        split,
+        current_dir: str,
+        clean_urls: bool,
+        quote: str,
+        available_routes: set[str] | None = None,
     ) -> str | None:
         """Rewrite absolute route paths. Returns None if route not found."""
-        resolved_route = self._resolve_route(split.path)
+        resolved_route = self._resolve_route(split.path, available_routes=available_routes)
         if not resolved_route:
             return None
 
@@ -343,7 +491,11 @@ class Astris:
         return f"href={quote}{rebuilt_href}{quote}"
 
     def _rewrite_static_links(
-        self, current_route: str, html: str, clean_urls: bool = False
+        self,
+        current_route: str,
+        html: str,
+        clean_urls: bool = False,
+        available_routes: set[str] | None = None,
     ) -> str:
         current_file = self._route_to_filename(current_route, clean_urls=clean_urls)
         current_dir = os.path.dirname(current_file) or "."
@@ -363,7 +515,11 @@ class Astris:
                 return match.group(0)
 
             route_result = self._rewrite_route_href(
-                split, current_dir, clean_urls, quote
+                split,
+                current_dir,
+                clean_urls,
+                quote,
+                available_routes=available_routes,
             )
             return route_result if route_result is not None else match.group(0)
 
@@ -391,7 +547,29 @@ class Astris:
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
 
-        for path, component in self.routes.items():
+        build_routes: Dict[str, Component] = dict(self.routes)
+
+        for route in self._dynamic_routes.values():
+            if not route.static_params:
+                raise ValueError(
+                    "Dynamic route requires static_params for build: "
+                    f"{route.path_pattern}"
+                )
+
+            for params in route.static_params:
+                concrete_path = self._materialize_dynamic_path(route.path_pattern, params)
+                if concrete_path in build_routes:
+                    raise ValueError(
+                        f"Build route already generated: {concrete_path}"
+                    )
+                component = route.render(dict(params))
+                if not isinstance(component, Component):
+                    raise TypeError("Page function must return an Astris Component")
+                build_routes[concrete_path] = component
+
+        available_routes = set(build_routes)
+
+        for path, component in build_routes.items():
             filename = self._route_to_filename(path, clean_urls=clean_urls)
             filepath = os.path.join(output_dir, filename)
             os.makedirs(os.path.dirname(filepath), exist_ok=True)
@@ -400,6 +578,7 @@ class Astris:
                 path,
                 self._render_page_html(component),
                 clean_urls=clean_urls,
+                available_routes=available_routes,
             )
 
             with open(filepath, "w", encoding="utf-8") as f:

@@ -6,6 +6,9 @@ All notable changes to this project are documented in this file.
 ## [0.1.5] - Unreleased
 
 ### Added
+- Added modular route registration via `Router(prefix=...)` and `app.include_router(router)` to split page declarations across files.
+- Added dynamic route support with path parameters (for example `/posts/{slug}`) for development runtime rendering.
+- Added `static_params` in `page(...)` decorators to pre-generate dynamic routes during static `build()`.
 - Added an extensible `Theme` API (`astris.theme.Theme`) with token groups for colors, spacing, custom scales, component defaults, and arbitrary extra metadata.
 - Added built-in default theme preset factory `create_default_theme("light" | "dark")`.
 - Added official soft preset factory `create_soft_theme("light" | "dark")` built on top of default theme tokens.
@@ -22,6 +25,8 @@ All notable changes to this project are documented in this file.
 ### Changed
 - Updated package version metadata to `0.1.5`.
 - Prepared release documentation and internal release notes for `0.1.5`.
+- Updated `example.py` to register pages through router modules and keep the entrypoint focused on app wiring.
+- Updated public docs and README with router-based project organization guidance.
 - Updated `Astris` to accept `theme=Theme(...)` and inject theme CSS variables into rendered pages.
 - Updated `Astris()` to assign `create_default_theme()` automatically when no theme is provided.
 - Updated page rendering to set `data-theme` and CSS `color-scheme` from theme mode (`light`/`dark`).

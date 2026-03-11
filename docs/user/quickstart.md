@@ -68,6 +68,48 @@ app = Astris(theme=create_soft_theme("light"))
 For full configuration, component defaults, and runtime switching, see [Themes](themes.md).
 That guide also covers responsive design with `add_media_query(...)`.
 
+## Organize routes with Router
+
+For larger apps, split pages into router modules and include them from `main.py`.
+
+```python
+# routes/pages.py
+from astris import Router
+from astris.lib import Body, H1, Html
+
+pages_router = Router(prefix="/pages")
+
+
+@pages_router.page("/")
+def pages_home():
+    return Html(children=[Body(children=[H1(children=["Pages home"])])])
+```
+
+```python
+# main.py
+from astris import Astris
+from routes.pages import pages_router
+
+app = Astris()
+app.include_router(pages_router)
+
+
+if __name__ == "__main__":
+    app.run_dev()
+```
+
+Dynamic routes are also supported.
+For static builds, define `static_params` so Astris knows which concrete pages to generate:
+
+```python
+@pages_router.page(
+    "/posts/{slug}",
+    static_params=[{"slug": "hello-astris"}, {"slug": "static-sites"}],
+)
+def post(slug: str):
+    ...
+```
+
 ### Load external CSS from Theme
 
 You can attach external stylesheet links directly to `Theme`:
