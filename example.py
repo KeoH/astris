@@ -1,157 +1,50 @@
 import sys
-from typing import Optional
 
-from astris import (
-    Astris,
-    Text,
-    create_default_theme,
-    create_soft_theme,
-    register_json_collection,
-    StyleSheet
-)
-from astris.components import (
-    A,
-    Body,
-    Button,
-    Div,
-    H1,
-    H2,
-    Head,
-    Html,
-    Li,
-    P,
-    Section,
-    Span,
-    Title,
-    Ul,
-)
+from astris import Astris, register_json_collection
 from astris.content import JsonCollection
-from astris.styles import Align, Display, EdgeInsets, FlexDirection, Style, style
-
-# Use "default" or "soft" to switch the app-level theme preset.
-THEME_PRESET = "soft"
-
-base_theme = (
-    create_soft_theme("dark")
-    if THEME_PRESET == "soft"
-    else create_default_theme("dark")
-)
-
-# Theme controls app-wide tokens and default component attributes.
-theme = base_theme.extend(
-    components={
-        "body": {
-            "style": "margin: 0; background: var(--color-bg); color: var(--color-fg);"
-        },
-        "Section": {"style": "margin-bottom: var(--space-lg);"},
-    },
-    extras={
-        "global_css": [
-            "* { box-sizing: border-box; }",
-            "a { color: inherit; }",
-        ]
-    },
-)
+from astris.lib import A, Body, Div, H1, H2, Head, Html, Li, Meta, P, Section, Span, Title, Ul
+from astris.styles import Display, EdgeInsets, Style
+from astris.themes.ember_dark import theme
+from astris.themes.ember_dark.components import Badge, Btn, Col, Row, SimpleCard, SiteHeader, SiteNavbar
 
 app = Astris(theme=theme)
 
-# StyleSheet is a good fit for reusable class-based UI primitives.
-stylesheet = StyleSheet()
-theme.set_stylesheet(stylesheet)
 
-cls_shell = stylesheet.add_class(
-    "shell",
-    Style(
-        max_width="960px",
-        margin="0 auto",
-        padding=EdgeInsets.symmetric(vertical=32, horizontal=20),
-    ),
-    responsive={"md": style(padding=EdgeInsets.symmetric(vertical=24, horizontal=14))},
-)
+def app_shell(page_title: str, active_nav: str, content: list) -> Html:
+    navbar = SiteNavbar(
+        options=[
+            {"label": "Home", "href": "/", "active": active_nav == "home"},
+            {"label": "Showcase", "href": "/showcase", "active": active_nav == "showcase"},
+            {"label": "Posts", "href": "/posts", "active": active_nav == "posts"},
+        ]
+    )
 
-cls_hero = stylesheet.add_class(
-    "hero",
-    Style(
-        display=Display.FLEX,
-        flex_direction=FlexDirection.COLUMN,
-        gap="14px",
-        padding=EdgeInsets.symmetric(vertical=28, horizontal=24),
-        border_radius="16px",
-        background_color="var(--color-surface)",
-        border="1px solid var(--color-surface-contrast)",
-        selectors={"& h1": Style(margin=0)},
-    ),
-    responsive={"md": style(padding=EdgeInsets.symmetric(vertical=20, horizontal=16))},
-)
-
-cls_feature_grid = stylesheet.add_class(
-    "feature-grid",
-    Style(
-        display=Display.GRID,
-        gap="12px",
-        grid_template_columns="repeat(auto-fit, minmax(220px, 1fr))",
-    ),
-    responsive={"md": style(grid_template_columns="1fr")},
-)
-
-cls_card = stylesheet.add_class(
-    "card",
-    Style(
-        padding=EdgeInsets.all(18),
-        border_radius="12px",
-        background_color="var(--color-surface)",
-        border="1px solid var(--color-surface-contrast)",
-        selectors={"& h2": Style(margin_top=0, margin_bottom="8px")},
-    ),
-)
-
-cls_btn = stylesheet.add_class(
-    "btn",
-    Style(
-        display=Display.INLINE_BLOCK,
-        text_decoration="none",
-        border="none",
-        border_radius="10px",
-        padding=EdgeInsets.symmetric(vertical=10, horizontal=16),
-        cursor="pointer",
-        font_weight="600",
-        background_color="var(--color-primary)",
-        color="var(--color-primary-contrast)",
-        states={
-            "hover": Style(filter="brightness(1.08)", transform="translateY(-1px)")
-        },
-    ),
-)
-
-cls_btn_subtle = stylesheet.add_class(
-    "btn-subtle",
-    Style(
-        background_color="var(--color-surface-contrast)",
-        color="var(--color-fg)",
-    ),
-)
-
-
-def main_layout(page_title: str, children: Optional[list] = None) -> Html:
-    """Single layout used by all routes to keep theming consistent."""
     return Html(
         children=[
-            Head(children=[Title(children=[page_title])]),
+            Head(
+                children=[
+                    Meta(charset="UTF-8"),
+                    Meta(name="viewport", content="width=device-width, initial-scale=1.0"),
+                    Title(page_title),
+                ]
+            ),
             Body(
                 children=[
-                    Div(class_name=cls_shell, children=children),
+                    SiteHeader("Astris Ember Studio", navbar),
                     Div(
-                        class_name=cls_shell,
-                        style=Style(
-                            border_top="1px solid var(--color-surface-contrast)",
-                            display=Display.FLEX,
-                            justify_content=Align.SPACE_BETWEEN,
-                            align_items=Align.CENTER,
-                            color="var(--color-muted)",
-                        ),
+                        class_name="container section stack-lg",
+                        children=content,
+                    ),
+                    Div(
+                        class_name="container section",
                         children=[
-                            Text("Astris demo"),
-                            Span(children=[f"Theme preset: {THEME_PRESET}"]),
+                            Div(
+                                class_name="surface d-flex justify-between item-center",
+                                children=[
+                                    Span("Built with astris.themes.ember_dark"),
+                                    Span("Mode: dark / Accent: deep red"),
+                                ],
+                            )
                         ],
                     ),
                 ]
@@ -161,33 +54,24 @@ def main_layout(page_title: str, children: Optional[list] = None) -> Html:
 
 
 def post_template(entry: dict) -> Html:
-    """Template used by register_json_collection for each post page."""
-    return main_layout(
+    return app_shell(
         page_title=entry.get("title", "Post"),
-        children=[
+        active_nav="posts",
+        content=[
+            Badge("POST", variant="primary"),
             Div(
+                class_name="surface stack-md",
                 children=[
-                    A(
-                        href="/posts",
-                        class_name=f"{cls_btn} {cls_btn_subtle}",
-                        children=["Back to posts"],
-                    ),
-                ]
-            ),
-            Section(
-                class_name=cls_card,
-                children=[
-                    H2(children=[entry.get("title", "Untitled")]),
-                    P(children=[entry.get("summary", "")]),
+                    H1(entry.get("title", "Untitled")),
+                    P(entry.get("summary", "")),
                     P(
-                        style=Style(color="var(--color-muted)"),
-                        children=[
-                            f"By {entry.get('author', 'Unknown')} | {entry.get('published_at', 'Unknown date')}"
-                        ],
+                        f"By {entry.get('author', 'Unknown')} • {entry.get('published_at', 'Unknown date')}",
+                        class_name="mono",
                     ),
-                    P(children=[entry.get("content", "")]),
+                    P(entry.get("content", "")),
                 ],
             ),
+            A("Back to all posts", href="/posts", class_name="btn btn-secondary"),
         ],
     )
 
@@ -203,73 +87,103 @@ posts_collection: JsonCollection = register_json_collection(
 
 @app.page("/")
 def home() -> Html:
-    return main_layout(
-        page_title="Astris Theme Guide",
-        children=[
-            Section(
-                class_name=cls_hero,
+    return app_shell(
+        page_title="Astris Ember Studio",
+        active_nav="home",
+        content=[
+            Div(
+                class_name="surface stack-md fade-up",
                 children=[
-                    H1(children=["Astris themes in one file"]),
+                    Badge("EMBER DARK", variant="primary"),
+                    H1("A dramatic dark baseline for Astris projects"),
                     P(
-                        children=[
-                            "This demo shows a practical relationship between theme tokens, reusable classes, and component composition."
-                        ]
+                        "This example is rebuilt from scratch to showcase the ember_dark theme package, semantic components, and utility classes."
                     ),
                     Div(
-                        style=Style(display=Display.FLEX, gap="10px"),
+                        class_name="d-flex gap-4 flex-wrap",
                         children=[
-                            A(
-                                href="/posts",
-                                class_name=cls_btn,
-                                children=["Browse posts"],
-                            ),
-                            Button(
-                                class_name=f"{cls_btn} {cls_btn_subtle}",
-                                children=["Secondary action"],
-                            ),
+                            A("Open showcase", href="/showcase", class_name="btn btn-primary"),
+                            A("Read generated posts", href="/posts", class_name="btn btn-secondary"),
                         ],
                     ),
                 ],
             ),
-            Section(
+            Row(
                 children=[
-                    H2(children=["How the pieces fit together"]),
+                    Col(
+                        class_name="col-12 col-md-6 col-lg-4",
+                        children=[
+                            SimpleCard(
+                                title="Token-first",
+                                content="Colors, spacing and scales come from ember_dark theme variables.",
+                            )
+                        ],
+                    ),
+                    Col(
+                        class_name="col-12 col-md-6 col-lg-4",
+                        children=[
+                            SimpleCard(
+                                title="Component-ready",
+                                content="Use SiteHeader, SiteNavbar, Badge, Btn, Row and Col out of the box.",
+                            )
+                        ],
+                    ),
+                    Col(
+                        class_name="col-12 col-md-6 col-lg-4",
+                        children=[
+                            SimpleCard(
+                                title="Build-friendly",
+                                content="Works in run_dev and static build with no extra theme wiring.",
+                            )
+                        ],
+                    ),
+                ]
+            ),
+        ],
+    )
+
+
+@app.page("/showcase")
+def showcase() -> Html:
+    return app_shell(
+        page_title="Ember Showcase",
+        active_nav="showcase",
+        content=[
+            Div(
+                class_name="surface stack-md",
+                children=[
+                    Badge("SHOWCASE", variant="neutral"),
+                    H2("Action states and semantic tones"),
+                    P("Quick sample of ember_dark button and alert surfaces."),
                     Div(
-                        class_name=cls_feature_grid,
+                        class_name="d-flex gap-4 flex-wrap",
+                        children=[
+                            Btn("Primary", variant="primary"),
+                            Btn("Secondary", variant="secondary"),
+                            Btn("Danger", variant="danger"),
+                            Btn("Ghost", variant="ghost"),
+                        ],
+                    ),
+                ],
+            ),
+            Row(
+                children=[
+                    Col(
+                        class_name="col-12 col-md-6",
                         children=[
                             Div(
-                                class_name=cls_card,
-                                children=[
-                                    H2(children=["1) Theme"]),
-                                    P(
-                                        children=[
-                                            "Theme controls colors, spacing, scales, and default attributes for components."
-                                        ]
-                                    ),
-                                ],
-                            ),
+                                class_name="alert alert-info",
+                                children=[H2("Info"), P("Subtle cool tone for informative notes.")],
+                            )
+                        ],
+                    ),
+                    Col(
+                        class_name="col-12 col-md-6",
+                        children=[
                             Div(
-                                class_name=cls_card,
-                                children=[
-                                    H2(children=["2) Classes"]),
-                                    P(
-                                        children=[
-                                            "StyleSheet provides reusable classes for shared UI building blocks."
-                                        ]
-                                    ),
-                                ],
-                            ),
-                            Div(
-                                class_name=cls_card,
-                                children=[
-                                    H2(children=["3) Components"]),
-                                    P(
-                                        children=[
-                                            "Routes compose components with class names and only use inline style for one-off adjustments."
-                                        ]
-                                    ),
-                                ],
-                            ),
+                                class_name="alert alert-danger",
+                                children=[H2("Danger"), P("Ember-dark keeps error messaging vivid and readable.")],
+                            )
                         ],
                     ),
                 ]
@@ -280,30 +194,34 @@ def home() -> Html:
 
 @app.page("/posts")
 def posts_index() -> Html:
-    return main_layout(
-        page_title="Posts",
-        children=[
-            H2(children=["Posts"]),
-            P(children=["Generated from JSON files in content/posts."]),
-            Ul(
-                style=Style(
-                    list_style="none",
-                    padding=EdgeInsets.all(0),
-                    display=Display.FLEX,
-                    flex_direction=FlexDirection.COLUMN,
-                    gap="10px",
-                ),
+    return app_shell(
+        page_title="Generated Posts",
+        active_nav="posts",
+        content=[
+            Badge("CONTENT", variant="success"),
+            Section(
+                class_name="surface stack-md",
                 children=[
-                    Li(
+                    H2("JSON-backed pages"),
+                    P("These links are generated from files in content/posts."),
+                    Ul(
+                        class_name="stack-sm",
+                        style=Style(
+                            list_style="none",
+                            padding=EdgeInsets.all(0),
+                            margin=EdgeInsets.all(0),
+                            display=Display.GRID,
+                            gap="var(--space-2)",
+                        ),
                         children=[
-                            A(
-                                href=route,
-                                class_name=f"{cls_btn} {cls_btn_subtle}",
-                                children=[route],
+                            Li(
+                                children=[
+                                    A(route, href=route, class_name="btn btn-secondary btn-block")
+                                ]
                             )
-                        ]
-                    )
-                    for route in posts_collection.page_links()
+                            for route in posts_collection.page_links()
+                        ],
+                    ),
                 ],
             ),
         ],

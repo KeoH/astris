@@ -10,6 +10,7 @@ uv run python main.py
 ```
 
 The generated project uses `pyproject.toml` for dependencies and does not include `requirements.txt`.
+It also uses the bundled default theme package (`astris.themes.default`) out of the box.
 
 ## Build static output
 
@@ -67,6 +68,32 @@ app = Astris(theme=create_soft_theme("light"))
 
 For full configuration, component defaults, and runtime switching, see [Themes](themes.md).
 That guide also covers responsive design with `add_media_query(...)`.
+
+### Use default theme components
+
+```python
+from astris import Astris
+from astris.lib import Div, H1
+from astris.themes.default import theme
+from astris.themes.default.components import Btn, SiteHeader, SiteNavbar
+from astris.themes.default.layout import astris_ui_layout
+
+app = Astris(theme=theme)
+
+
+@app.page("/")
+def home():
+    navbar = SiteNavbar(options=[{"label": "Home", "href": "/", "active": True}])
+    return astris_ui_layout(content=[
+        SiteHeader("Astris", navbar),
+        Div(class_name="container section", children=[
+            H1("Astris with default theme"),
+            Btn("Get Started", variant="primary"),
+        ]),
+    ])
+```
+
+See [Themes: Use the default theme package](themes.md#use-the-default-theme-package) for complete examples with cards, badges, and responsive layouts.
 
 ## Organize routes with Router
 
@@ -135,7 +162,7 @@ When local `./assets` exists:
 - `run_dev()` serves it automatically at `/assets`.
 - `build()` copies it automatically to `<output_dir>/assets`.
 
-For ordering, deduplication, and build behavior details, see [Themes](themes.md#external-css-in-theme).
+For ordering, deduplication, and build behavior details, see [Themes](themes.md#external-stylesheets-in-theme).
 
 ## Add assets in the page head
 

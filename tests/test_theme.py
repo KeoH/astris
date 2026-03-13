@@ -1,6 +1,8 @@
 import astris
 import pytest
 from astris.stylesheet import StyleSheet
+from astris.themes.bootstrap import theme as bootstrap_theme
+from astris.themes.ember_dark import theme as ember_dark_theme
 from astris.theme import Theme, create_default_theme, create_soft_theme
 
 
@@ -169,3 +171,32 @@ def test_create_soft_theme_dark_palette() -> None:
 
 def test_soft_theme_factory_is_exported() -> None:
     assert "create_soft_theme" in astris.__all__
+
+
+def test_ember_dark_theme_uses_dark_mode_and_red_primary() -> None:
+    assert ember_dark_theme.mode == "dark"
+    assert ember_dark_theme.colors["bg"] == "#0e0f14"
+    assert ember_dark_theme.colors["primary"] == "#8b1e2d"
+
+
+def test_ember_dark_theme_has_attached_stylesheet() -> None:
+    assert ember_dark_theme.get_stylesheet() is not None
+
+
+def test_ember_dark_theme_metadata_name() -> None:
+    assert ember_dark_theme.extras["name"] == "astris-ember-dark"
+
+
+def test_bootstrap_theme_uses_light_mode_and_primary() -> None:
+    assert bootstrap_theme.mode == "light"
+    assert bootstrap_theme.colors["primary"] == "#0d6efd"
+
+
+def test_bootstrap_theme_loads_bootstrap_cdn() -> None:
+    assert bootstrap_theme.stylesheets == [
+        "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    ]
+
+
+def test_bootstrap_theme_has_attached_stylesheet() -> None:
+    assert bootstrap_theme.get_stylesheet() is not None

@@ -56,6 +56,8 @@ class Element(Component):
     ):
         style = attributes.pop("style", None)
         styles = attributes.pop("styles", None)
+        if "id" in attributes:
+            self.id = attributes.get("id")
 
         normalized_styles: List[Style] = []
         if styles is not None:

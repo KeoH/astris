@@ -21,6 +21,9 @@ All notable changes to this project are documented in this file.
 - Added external stylesheet registration in `astris.theme.Theme` via `stylesheets` and `add_stylesheet(...)`.
 - Added `responsive` support in `StyleSheet.add_class(...)` to define class-level breakpoint overrides in the same call.
 - Added `Style` support for class-local `states` and `selectors` so pseudo-states (`:hover`, `:focus-visible`) and structural selectors (`:nth-child(...)`, `& > ...`) can be defined without `add_raw(...)`.
+- Added workspace agent skill `create-astris-theme` under `.agent/skills/` with reusable resources to standardize new theme creation.
+- Added bundled theme package `astris.themes.ember_dark` with dark mode tokens, deep-red primary accents, and reusable theme components/layout helpers.
+- Added bundled theme package `astris.themes.bootstrap` that loads Bootstrap from CDN and provides Astris-native Bootstrap wrappers.
 
 ### Changed
 - Updated package version metadata to `0.1.5`.
@@ -47,6 +50,9 @@ All notable changes to this project are documented in this file.
 - Updated `example.py` with a full theme-first walkthrough that connects app tokens, reusable CSS classes, and route composition.
 - Updated public theme documentation (`docs/user/themes.md`) with a recommended step-by-step workflow aligned to `example.py`.
 - Updated `README.md` theme section to point to the renewed example-driven workflow.
+- Updated `astris new` scaffold to use the bundled default theme package (`astris.themes.default`) with theme components and layout helpers.
+- Updated public theme docs with usage examples for the new bundled `astris.themes.ember_dark` package.
+- Updated Bootstrap component guidance to use `astris.themes.bootstrap.components` as the canonical source.
 
 ### Fixed
 - Aligned release metadata across project files for consistent packaging and distribution workflows.
