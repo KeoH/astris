@@ -27,6 +27,7 @@ uv run python main.py
 ```
 
 Generated projects use `pyproject.toml` for dependency management (UV-first), without `requirements.txt`.
+Generated projects also use the bundled default theme package (`astris.themes.default`) as the starter UI layer.
 
 Build static files:
 
@@ -79,6 +80,9 @@ Reference implementation:
 
 The themes guide includes responsive media query usage with `StyleSheet.add_media_query(...)`.
 For class-first CSS generation with `Style` + `StyleSheet`, see `docs/user/styles.md`.
+It also includes a dedicated section for the bundled default theme package (`astris.themes.default`) with examples using `SiteHeader`, `SiteNavbar`, `Badge`, `Btn`, and `SimpleCard`.
+It also includes usage for the bundled dark-red preset package (`astris.themes.ember_dark`).
+It also includes usage for the bundled Bootstrap-based package (`astris.themes.bootstrap`) powered by a Bootstrap CDN stylesheet.
 
 Use the built-in default preset:
 
@@ -120,6 +124,10 @@ Rules:
 - `run_dev()` mounts local `./assets` at `/assets` automatically when that directory exists.
 - `build()` copies local `./assets` into `dist/assets` automatically when that directory exists.
 - During `build()`, relative `assets/...` links are rewritten per page depth (for example `../assets/...` in nested routes).
+
+Default-theme component examples:
+
+- `docs/user/themes.md#use-the-default-theme-package`
 
 ## HTML tags API
 

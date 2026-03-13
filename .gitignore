@@ -15,3 +15,5 @@ wheels/
 .venv
 .env
 env
+
+.playwright-mcp/

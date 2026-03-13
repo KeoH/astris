@@ -15,15 +15,18 @@ def test_create_project_generates_expected_files(tmp_path: Path) -> None:
 
     main_content = (project_path / "main.py").read_text(encoding="utf-8")
     pyproject_content = (project_path / "pyproject.toml").read_text(encoding="utf-8")
-    assert "from astris import Astris, Theme, StyleSheet" in main_content
-    assert "theme = Theme(" in main_content
-    assert "name=\"Starter Theme\"" in main_content
-    assert (
-        "https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
-        in main_content
-    )
-    assert "theme.set_stylesheet(StyleSheet())" in main_content
+    assert "from astris import Astris" in main_content
+    assert "from astris.themes.default import theme" in main_content
+    assert "from astris.themes.default.components import" in main_content
+    assert "from astris.themes.default.layout import astris_ui_layout" in main_content
+    assert "navbar = SiteNavbar(" in main_content
+    assert "SiteHeader(\"Astris\", navbar)" in main_content
+    assert "SimpleCard(" in main_content
+    assert "Btn(\"Read Docs\", variant=\"primary\")" in main_content
     assert "app = Astris(theme=theme)" in main_content
+    assert "Theme(" not in main_content
+    assert "StyleSheet()" not in main_content
+    assert "tailwindcss@2.2.19" not in main_content
     assert "app.add_head_script(\"https://cdn.tailwindcss.com\")" not in main_content
     assert '@app.page("/")' in main_content
     assert f'"astris=={__version__}"' in pyproject_content

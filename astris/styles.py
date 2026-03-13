@@ -18,6 +18,7 @@ class Display(str, Enum):
     BLOCK = "block"
     INLINE = "inline"
     INLINE_BLOCK = "inline-block"
+    INLINE_FLEX = "inline-flex"
     FLEX = "flex"
     GRID = "grid"
     NONE = "none"

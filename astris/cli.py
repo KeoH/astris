@@ -15,393 +15,68 @@ from .app import Astris
 
 MAIN_TEMPLATE = """import sys
 
-from astris import Astris, Theme, StyleSheet
-from astris.lib import A, Body, Button, Div, H1, Header, Html, Main, P, Span
+from astris import Astris
+from astris.lib import Div, H1, P
+from astris.themes.default import theme
+from astris.themes.default.components import Badge, Btn, SimpleCard, SiteHeader, SiteNavbar
+from astris.themes.default.layout import astris_ui_layout
 
-theme = Theme(
-    name="Starter Theme",
-    stylesheets=["https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"],
-)
-theme.set_stylesheet(StyleSheet())
 app = Astris(theme=theme)
 
 
 @app.page("/")
 def home():
-    return Html(
-        **{"lang": "en", "class": "scroll-smooth"},
-        children=[
-            Body(
-                **{
-                    "class": "bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans antialiased selection:bg-indigo-500/30 selection:text-indigo-200"
-                },
+    navbar = SiteNavbar(
+        options=[
+            {"label": "Home", "href": "/", "active": True},
+            {"label": "Documentation", "href": "https://astris.readthedocs.io"},
+            {"label": "GitHub", "href": "https://github.com/keoh/astris"},
+        ]
+    )
+
+    return astris_ui_layout(
+        content=[
+            SiteHeader("Astris", navbar),
+            Div(
+                class_name="container section stack-md",
                 children=[
-                    # Background Effect
+                    Badge("DEFAULT THEME", variant="primary"),
+                    H1("Welcome to your new Astris project"),
+                    P(
+                        "This starter project uses the bundled default theme, layout helper, and reusable components."
+                    ),
                     Div(
-                        **{"class": "fixed inset-0 z-[-1]", "aria-hidden": "true"},
+                        class_name="row",
                         children=[
                             Div(
-                                **{
-                                    "class": "absolute top-0 -left-4 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-pulse"
-                                },
-                                children=[]
+                                class_name="col-12 col-md-6",
+                                children=[
+                                    SimpleCard(
+                                        title="Fast start",
+                                        content="Edit this page and compose new routes with themed components.",
+                                    )
+                                ],
                             ),
                             Div(
-                                **{
-                                    "class": "absolute top-0 -right-4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-pulse animation-delay-2000"
-                                },
-                                children=[]
+                                class_name="col-12 col-md-6",
+                                children=[
+                                    SimpleCard(
+                                        title="Build ready",
+                                        content="Run astris build to generate static HTML from your routes.",
+                                    )
+                                ],
                             ),
-                            Div(
-                                **{
-                                    "class": "absolute -bottom-8 left-20 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-[128px] opacity-20 animate-pulse animation-delay-4000"
-                                },
-                                children=[]
-                            ),
-                        ]
+                        ],
                     ),
-                    # Header Navigation
-                    Header(
-                        **{
-                            "class": "w-full py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex items-center justify-between"
-                        },
+                    Div(
+                        class_name="d-flex gap-4",
                         children=[
-                            Div(
-                                **{
-                                    "class": "flex items-center gap-2 group cursor-pointer"
-                                },
-                                children=[
-                                    Div(
-                                        **{
-                                            "class": "w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center transform group-hover:rotate-12 transition-transform duration-300 shadow-lg shadow-indigo-500/30"
-                                        },
-                                        children=[
-                                            Span(
-                                                **{
-                                                    "class": "text-white font-bold text-lg"
-                                                },
-                                                children=["A"]
-                                            )
-                                        ]
-                                    ),
-                                    Span(
-                                        **{
-                                            "class": "text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400"
-                                        },
-                                        children=["Astris"]
-                                    ),
-                                ]
-                            ),
-                            Div(
-                                **{
-                                    "class": "flex items-center gap-6 text-sm font-medium"
-                                },
-                                children=[
-                                    A(
-                                        **{
-                                            "href": "https://astris.readthedocs.io",
-                                            "target": "_blank",
-                                            "rel": "noopener noreferrer",
-                                            "class": "text-slate-300 hover:text-white transition-colors",
-                                        },
-                                        children=["Documentation"]
-                                    ),
-                                    A(
-                                        **{
-                                            "href": "https://github.com/keoh/astris",
-                                            "target": "_blank",
-                                            "rel": "noopener noreferrer",
-                                            "class": "text-slate-300 hover:text-white transition-colors",
-                                        },
-                                        children=["GitHub"]
-                                    ),
-                                ]
-                            ),
-                        ]
+                            Btn("Read Docs", variant="primary", onclick="location.href='https://astris.readthedocs.io'"),
+                            Btn("View API", variant="secondary", onclick="location.href='https://astris.readthedocs.io/en/latest/api/'"),
+                        ],
                     ),
-                    # Main Content area (Hero Section)
-                    Main(
-                        **{
-                            "class": "flex-grow flex flex-col items-center justify-center px-4 sm:px-6 lg:px-8 text-center mt-12 mb-24"
-                        },
-                        children=[
-                            # Badge
-                            A(
-                                **{
-                                    "href": "https://astris.readthedocs.io",
-                                    "target": "_blank",
-                                    "class": "inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-800/50 border border-slate-700/50 text-sm font-medium text-slate-300 mb-8 backdrop-blur-sm hover:bg-slate-800 hover:border-slate-600 transition-all cursor-pointer group",
-                                },
-                                children=[
-                                    Span(
-                                        **{"class": "relative flex h-2 w-2"},
-                                        children=[
-                                            Span(
-                                                **{
-                                                    "class": "animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"
-                                                },
-                                                children=[]
-                                            ),
-                                            Span(
-                                                **{
-                                                    "class": "relative inline-flex rounded-full h-2 w-2 bg-indigo-500"
-                                                },
-                                                children=[]
-                                            ),
-                                        ]
-                                    ),
-                                    Span(children=["Astris Framework Ready"]),
-                                    Span(
-                                        **{
-                                            "class": "text-indigo-400 group-hover:translate-x-1 transition-transform"
-                                        },
-                                        children=["→"]
-                                    ),
-                                ]
-                            ),
-                            # Title
-                            H1(
-                                **{
-                                    "class": "text-5xl sm:text-6xl md:text-7xl font-extrabold tracking-tight mb-8 max-w-4xl mx-auto"
-                                },
-                                children=[
-                                    Span(children=["Build static websites "]),
-                                    Span(**{"class": "inline-block"}, children=[]),
-                                    Span(
-                                        **{
-                                            "class": "text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 hover:from-pink-400 hover:to-indigo-400 transition-all duration-1000"
-                                        },
-                                        children=["elegantly"]
-                                    ),
-                                ]
-                            ),
-                            # Description
-                            P(
-                                **{
-                                    "class": "text-lg sm:text-xl text-slate-400 mb-10 max-w-2xl mx-auto leading-relaxed"
-                                },
-                                children=[
-                                    "You are looking at your new Astris application. It's time to start building something amazing using component-style APIs in Python."
-                                ]
-                            ),
-                            # Action Buttons
-                            Div(
-                                **{
-                                    "class": "flex flex-col sm:flex-row gap-4 justify-center"
-                                },
-                                children=[
-                                    A(
-                                        **{
-                                            "href": "https://astris.readthedocs.io/en/latest/quickstart/",
-                                            "target": "_blank",
-                                            "rel": "noopener noreferrer",
-                                        },
-                                        children=[
-                                            Button(
-                                                **{
-                                                    "class": "px-8 py-4 w-full sm:w-auto rounded-xl bg-white text-slate-900 font-bold hover:bg-slate-100 hover:scale-[1.02] shadow-[0_0_40px_-10px_rgba(255,255,255,0.3)] transition-all duration-200 active:scale-95"
-                                                },
-                                                children=["Get Started"]
-                                            )
-                                        ]
-                                    ),
-                                    A(
-                                        **{
-                                            "href": "https://astris.readthedocs.io/en/latest/api/",
-                                            "target": "_blank",
-                                            "rel": "noopener noreferrer",
-                                        },
-                                        children=[
-                                            Button(
-                                                **{
-                                                    "class": "px-8 py-4 w-full sm:w-auto rounded-xl bg-slate-800/80 text-white font-bold border border-slate-700 hover:bg-slate-800 hover:border-slate-500 hover:shadow-lg backdrop-blur-sm transition-all duration-200 active:scale-95"
-                                                },
-                                                children=["View API Reference"]
-                                            )
-                                        ]
-                                    ),
-                                ]
-                            ),
-                            # Code Snippet Preview (Glassmorphism card)
-                            Div(
-                                **{
-                                    "class": "mt-16 w-full max-w-2xl mx-auto text-left relative group"
-                                },
-                                children=[
-                                    # Decorative gradient border
-                                    Div(
-                                        **{
-                                            "class": "absolute -inset-[1px] bg-gradient-to-r from-indigo-500/50 via-purple-500/50 to-pink-500/50 rounded-2xl blur-sm opacity-50 group-hover:opacity-100 transition duration-500"
-                                        },
-                                        children=[]
-                                    ),
-                                    Div(
-                                        **{
-                                            "class": "relative bg-slate-900/80 backdrop-blur-xl border border-slate-700/50 rounded-2xl overflow-hidden shadow-2xl"
-                                        },
-                                        children=[
-                                            Div(
-                                                **{
-                                                    "class": "flex items-center px-4 py-3 bg-slate-800/50 border-b border-slate-700/50"
-                                                },
-                                                children=[
-                                                    Div(
-                                                        **{"class": "flex gap-2"},
-                                                        children=[
-                                                            Div(
-                                                                **{
-                                                                    "class": "w-3 h-3 rounded-full bg-red-500/80"
-                                                                },
-                                                                children=[]
-                                                            ),
-                                                            Div(
-                                                                **{
-                                                                    "class": "w-3 h-3 rounded-full bg-yellow-500/80"
-                                                                },
-                                                                children=[]
-                                                            ),
-                                                            Div(
-                                                                **{
-                                                                    "class": "w-3 h-3 rounded-full bg-green-500/80"
-                                                                },
-                                                                children=[]
-                                                            ),
-                                                        ]
-                                                    ),
-                                                    Span(
-                                                        **{
-                                                            "class": "ml-4 text-xs font-mono text-slate-400"
-                                                        },
-                                                        children=["main.py"]
-                                                    ),
-                                                ]
-                                            ),
-                                            Div(
-                                                **{"class": "p-6 overflow-x-auto"},
-                                                children=[
-                                                    P(
-                                                        **{
-                                                            "class": "font-mono text-sm leading-relaxed"
-                                                        },
-                                                        children=[
-                                                            Span(
-                                                                **{
-                                                                    "class": "text-purple-400"
-                                                                },
-                                                                children=["from "]
-                                                            ),
-                                                            Span(
-                                                                **{
-                                                                    "class": "text-slate-300"
-                                                                },
-                                                                children=["astris "]
-                                                            ),
-                                                            Span(
-                                                                **{
-                                                                    "class": "text-purple-400"
-                                                                },
-                                                                children=["import "]
-                                                            ),
-                                                            Span(
-                                                                **{
-                                                                    "class": "text-yellow-200"
-                                                                },
-                                                                children=["Astris"]
-                                                            ),
-                                                            Div(
-                                                                **{"class": "h-2"},
-                                                                children=[]
-                                                            ),
-                                                            Span(
-                                                                **{
-                                                                    "class": "text-slate-300"
-                                                                },
-                                                                children=["app = "]
-                                                            ),
-                                                            Span(
-                                                                **{
-                                                                    "class": "text-yellow-200"
-                                                                },
-                                                                children=["Astris"]
-                                                            ),
-                                                            Span(
-                                                                **{
-                                                                    "class": "text-slate-300"
-                                                                },
-                                                                children=["()"]
-                                                            ),
-                                                            Div(
-                                                                **{"class": "h-2"},
-                                                                children=[]
-                                                            ),
-                                                            Span(
-                                                                **{
-                                                                    "class": "text-yellow-400"
-                                                                },
-                                                                children=["@app.page"]
-                                                            ),
-                                                            Span(
-                                                                **{
-                                                                    "class": "text-slate-300"
-                                                                },
-                                                                children=["("]
-                                                            ),
-                                                            Span(
-                                                                **{
-                                                                    "class": "text-green-300"
-                                                                },
-                                                                children=['"/"']
-                                                            ),
-                                                            Span(
-                                                                **{
-                                                                    "class": "text-slate-300"
-                                                                },
-                                                                children=[")"]
-                                                            ),
-                                                            Div(
-                                                                **{"class": "h-0"},
-                                                                children=[]
-                                                            ),
-                                                            Span(
-                                                                **{
-                                                                    "class": "text-purple-400"
-                                                                },
-                                                                children=["def "]
-                                                            ),
-                                                            Span(
-                                                                **{
-                                                                    "class": "text-blue-300"
-                                                                },
-                                                                children=["home"]
-                                                            ),
-                                                            Span(
-                                                                **{
-                                                                    "class": "text-slate-300"
-                                                                },
-                                                                children=["():"]
-                                                            ),
-                                                            Div(
-                                                                **{"class": "h-0"},
-                                                                children=[]
-                                                            ),
-                                                            Span(
-                                                                **{
-                                                                    "class": "text-slate-300 pl-4"
-                                                                },
-                                                                children=["..."]
-                                                            ),
-                                                        ]
-                                                    )
-                                                ]
-                                            ),
-                                        ]
-                                    ),
-                                ]
-                            ),
-                        ]
-                    ),
-                ]
-            )
+                ],
+            ),
         ]
     )
 
